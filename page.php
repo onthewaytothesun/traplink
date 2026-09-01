@@ -81,7 +81,9 @@ function getGlobalTheme(PDO $pdo): array {
 }
 
 function renderPage(array $page, array $blocks, PDO $pdo): void {
-    $title = htmlspecialchars($page['title']);
+    $seoTitle = trim($theme['seo_title'] ?? '');
+    $title = htmlspecialchars($seoTitle ?: $page['title']);
+    $seoDescription = trim($theme['seo_description'] ?? '');
     $theme = getGlobalTheme($pdo);
     $screenBg   = sanitizeCssColor($theme['screen']     ?? '#ffffff', '#ffffff');
     $textColor  = sanitizeCssColor($theme['text_color'] ?? '#343a40', '#343a40');
@@ -102,6 +104,7 @@ function renderPage(array $page, array $blocks, PDO $pdo): void {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= $title ?></title>
+<?php if ($seoDescription !== ''): ?><meta name="description" content="<?= htmlspecialchars($seoDescription) ?>"><?php endif; ?>
 <link rel="stylesheet" href="/assets/taplink-frontend.css">
 <style>
 :root {

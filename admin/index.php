@@ -475,6 +475,23 @@ if (!$isAuth):
       <h2 class="text-lg font-semibold text-white">Настройки</h2>
 
       <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">SEO</div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1.5">Заголовок сайта <span class="text-gray-600">(тег &lt;title&gt;)</span></label>
+          <input type="text" x-model="siteSettings.seo_title" maxlength="120"
+            class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+            placeholder="Название сайта">
+          <p class="text-xs text-gray-600 mt-1">Если не задан — используется название страницы.</p>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1.5">Описание <span class="text-gray-600">(meta description)</span></label>
+          <textarea x-model="siteSettings.seo_description" rows="3" maxlength="300"
+            class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+            placeholder="Краткое описание сайта для поисковиков"></textarea>
+        </div>
+      </div>
+
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
         <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Вставка HTML-кода в &lt;head&gt;</div>
         <p class="text-xs text-gray-500 leading-relaxed">Код вставляется на всех опубликованных страницах перед закрывающим тегом <code class="text-gray-400">&lt;/head&gt;</code>. Используйте для подключения метрик, пикселей, шрифтов и других внешних скриптов.</p>
         <div id="headCodeEditor" class="rounded-lg overflow-hidden border border-gray-700"></div>
@@ -1009,7 +1026,7 @@ function app(){return{
   design:{screen:'#ffffff',text_color:'#343a40',link_bg:'#ffffff',link_color:'#343a40',link_radius:7,link_border_width:0,link_border_color:'#ffffff',link_shadow:'none',link_shadow_color:'rgba(0,0,0,.15)',page_font:''},
   designSaving:false,
   settingsLoaded:false,
-  siteSettings:{head_code:''},
+  siteSettings:{head_code:'',seo_title:'',seo_description:''},
   siteSettingsSaving:false,
   siteSettingsLoaded:false,
   _headCm:null,
