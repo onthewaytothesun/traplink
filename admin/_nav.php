@@ -27,6 +27,9 @@
       <button @click="activeTab='settings';loadSiteSettings()"
         :class="activeTab==='settings'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Настройки</button>
+      <button @click="activeTab='submissions';loadAllSubmissions()"
+        :class="activeTab==='submissions'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
+        class="px-3 py-1.5 rounded-lg text-sm transition-colors">Заявки</button>
     <?php else: ?>
       <a href="/admin/"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors text-gray-500 hover:text-gray-200 hover:bg-gray-800 no-underline">Страницы</a>

@@ -341,10 +341,10 @@ switch ($action) {
     case 'submissions':
         $blockId = $_GET['block_id'] ?? null;
         if ($blockId) {
-            $stmt = $pdo->prepare("SELECT * FROM `tap_submissions` WHERE `block_id`=? ORDER BY `created_at` DESC");
+            $stmt = $pdo->prepare("SELECT s.*, p.title as page_title FROM `tap_submissions` s LEFT JOIN `tap_pages` p ON p.id=s.page_id WHERE s.`block_id`=? ORDER BY s.`created_at` DESC");
             $stmt->execute([$blockId]);
         } else {
-            $stmt = $pdo->query("SELECT * FROM `tap_submissions` ORDER BY `created_at` DESC");
+            $stmt = $pdo->query("SELECT s.*, p.title as page_title FROM `tap_submissions` s LEFT JOIN `tap_pages` p ON p.id=s.page_id ORDER BY s.`created_at` DESC LIMIT 25");
         }
         $rows = $stmt->fetchAll();
         foreach ($rows as &$r) {
