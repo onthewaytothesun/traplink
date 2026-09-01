@@ -327,6 +327,24 @@ switch ($action) {
         echo json_encode(['ok' => true]);
         break;
 
+    case 'getSiteSettings':
+        try {
+            $rows = $pdo->query("SELECT `setting_key`, `setting_value` FROM `tap_settings`")
+                ->fetchAll(PDO::FETCH_KEY_PAIR);
+        } catch (PDOException $e) { $rows = []; }
+        echo json_encode(['settings' => [
+            'head_code' => $rows['head_code'] ?? '',
+        ]]);
+        break;
+
+    case 'saveSiteSettings':
+        $stmt = $pdo->prepare("INSERT INTO `tap_settings` (`setting_key`,`setting_value`) VALUES (?,?) ON DUPLICATE KEY UPDATE `setting_value`=VALUES(`setting_value`)");
+        if (array_key_exists('head_code', $body)) {
+            $stmt->execute(['head_code', (string)($body['head_code'] ?? '')]);
+        }
+        echo json_encode(['ok' => true]);
+        break;
+
     default:
         echo json_encode(['error' => 'unknown action']);
 }

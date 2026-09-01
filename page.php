@@ -149,6 +149,10 @@ body { font-family: <?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,
         $families = implode('&family=', array_map(fn($f) => rawurlencode($f) . ':wght@400;600;700', array_keys($googleFonts)));
         echo "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family={$families}&display=swap\">\n";
     }
+    $headCode = trim($theme['head_code'] ?? '');
+    if ($headCode !== '') {
+        echo $headCode . "\n";
+    }
 ?>
 </head>
 <body>

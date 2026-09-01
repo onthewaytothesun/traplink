@@ -67,9 +67,17 @@ if (!$isAuth):
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1/Sortable.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/htmlmixed/htmlmixed.min.js"></script>
 <style>
   [x-cloak]{display:none!important}
   .sb::-webkit-scrollbar{width:3px}.sb::-webkit-scrollbar-track{background:transparent}.sb::-webkit-scrollbar-thumb{background:#374151;border-radius:2px}
+  .CodeMirror{height:280px;font-size:13px;font-family:'JetBrains Mono','Fira Mono',monospace;border-radius:0.5rem;}
 </style>
 </head>
 <body class="bg-gray-950 text-white" x-data="app()" x-init="init()">
@@ -458,6 +466,23 @@ if (!$isAuth):
       <button @click="saveDesign()" :disabled="designSaving"
         class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
         x-text="designSaving?'Сохраняю…':'Сохранить дизайн'"></button>
+    </div>
+  </div>
+
+  <!-- Settings tab -->
+  <div x-show="activeTab==='settings'" x-cloak class="flex-1 overflow-y-auto sb p-8 flex justify-center">
+    <div class="w-full max-w-lg space-y-6">
+      <h2 class="text-lg font-semibold text-white">Настройки</h2>
+
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Вставка HTML-кода в &lt;head&gt;</div>
+        <p class="text-xs text-gray-500 leading-relaxed">Код вставляется на всех опубликованных страницах перед закрывающим тегом <code class="text-gray-400">&lt;/head&gt;</code>. Используйте для подключения метрик, пикселей, шрифтов и других внешних скриптов.</p>
+        <div id="headCodeEditor" class="rounded-lg overflow-hidden border border-gray-700"></div>
+      </div>
+
+      <button @click="saveSiteSettings()" :disabled="siteSettingsSaving"
+        class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
+        x-text="siteSettingsSaving?'Сохраняю…':'Сохранить настройки'"></button>
     </div>
   </div>
 </div>
@@ -984,6 +1009,10 @@ function app(){return{
   design:{screen:'#ffffff',text_color:'#343a40',link_bg:'#ffffff',link_color:'#343a40',link_radius:7,link_border_width:0,link_border_color:'#ffffff',link_shadow:'none',link_shadow_color:'rgba(0,0,0,.15)',page_font:''},
   designSaving:false,
   settingsLoaded:false,
+  siteSettings:{head_code:''},
+  siteSettingsSaving:false,
+  siteSettingsLoaded:false,
+  _headCm:null,
   pageForm:{title:'',slug:'',is_main:false,slugEdited:false,folder_id:null},
 
   _sortable:null,
@@ -1000,6 +1029,11 @@ function app(){return{
   async init(){
     await Promise.all([this.loadPages(),this.loadFolders(),this.loadSettings()]);
     this.loading=false;
+    this.$watch('activeTab',tab=>{
+      if(tab==='settings'){
+        this.loadSiteSettings().then(()=>this.$nextTick(()=>this._initHeadCm()));
+      }
+    });
   },
   async loadPages(){
     const d=await(await fetch('/admin/api.php?action=pages')).json();
@@ -1198,6 +1232,36 @@ function app(){return{
     try{
       await fetch('/admin/api.php?action=saveSettings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.design)});
     }finally{this.designSaving=false;}
+  },
+
+  async loadSiteSettings(){
+    if(this.siteSettingsLoaded)return;
+    try{
+      const d=await(await fetch('/admin/api.php?action=getSiteSettings')).json();
+      if(d.settings)Object.assign(this.siteSettings,d.settings);
+      this.siteSettingsLoaded=true;
+      if(this._headCm)this._headCm.setValue(this.siteSettings.head_code||'');
+    }catch(e){}
+  },
+  async saveSiteSettings(){
+    if(this._headCm)this.siteSettings.head_code=this._headCm.getValue();
+    this.siteSettingsSaving=true;
+    try{
+      await fetch('/admin/api.php?action=saveSiteSettings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.siteSettings)});
+    }finally{this.siteSettingsSaving=false;}
+  },
+  _initHeadCm(){
+    const el=document.getElementById('headCodeEditor');
+    if(!el||this._headCm)return;
+    this._headCm=CodeMirror(el,{
+      value:this.siteSettings.head_code||'',
+      mode:'htmlmixed',
+      theme:'material-darker',
+      lineNumbers:true,
+      lineWrapping:true,
+      tabSize:2,
+      indentWithTabs:false,
+    });
   },
 };}
 </script>
