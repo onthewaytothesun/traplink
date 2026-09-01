@@ -86,6 +86,17 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `tap_settings` (
     PRIMARY KEY (`setting_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS `tap_submissions` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `block_id` varchar(64) DEFAULT NULL,
+    `page_id` varchar(64) DEFAULT NULL,
+    `data` longtext,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_block` (`block_id`),
+    KEY `idx_page` (`page_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
 $action = $_GET['action'] ?? '';
 $body   = $_SERVER['REQUEST_METHOD'] === 'POST'
     ? (json_decode(file_get_contents('php://input'), true) ?? [])
@@ -324,6 +335,27 @@ switch ($action) {
                 $stmt->execute([$k, $val]);
             }
         }
+        echo json_encode(['ok' => true]);
+        break;
+
+    case 'submissions':
+        $blockId = $_GET['block_id'] ?? null;
+        if ($blockId) {
+            $stmt = $pdo->prepare("SELECT * FROM `tap_submissions` WHERE `block_id`=? ORDER BY `created_at` DESC");
+            $stmt->execute([$blockId]);
+        } else {
+            $stmt = $pdo->query("SELECT * FROM `tap_submissions` ORDER BY `created_at` DESC");
+        }
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$r) {
+            $r['data'] = json_decode($r['data'] ?? '{}', true) ?: [];
+        }
+        echo json_encode(['submissions' => $rows]);
+        break;
+
+    case 'deleteSubmission':
+        $id = (int)($body['id'] ?? 0);
+        if ($id) $pdo->prepare("DELETE FROM `tap_submissions` WHERE `id`=?")->execute([$id]);
         echo json_encode(['ok' => true]);
         break;
 

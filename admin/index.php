@@ -305,6 +305,11 @@ if (!$isAuth):
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-0.5">
+                        <template x-if="b.block_type_name==='form'">
+                          <button @click="openSubmissions(b)" class="text-gray-500 hover:text-blue-400 p-1.5 rounded hover:bg-gray-700 transition-colors" title="Заявки">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                          </button>
+                        </template>
                         <button @click="openEdit(b)" class="text-gray-500 hover:text-white p-1.5 rounded hover:bg-gray-700 transition-colors">
                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1006,6 +1011,53 @@ if (!$isAuth):
   </div>
 </div>
 
+<!-- ══ Submissions modal ══ -->
+<div x-show="subsModal" x-cloak @click.self="subsModal=false"
+  class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[85vh]">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-800 shrink-0">
+      <div>
+        <h3 class="font-semibold">Заявки</h3>
+        <p class="text-xs text-gray-500 mt-0.5" x-text="submissions.length + ' шт.'"></p>
+      </div>
+      <button @click="subsModal=false" class="text-gray-500 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto sb p-5 flex-1">
+      <div x-show="subsLoading" class="flex justify-center py-10 text-gray-500">
+        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+      <div x-show="!subsLoading && submissions.length===0" class="text-center py-10 text-gray-500 text-sm">Заявок пока нет</div>
+      <div x-show="!subsLoading && submissions.length>0" class="space-y-3">
+        <template x-for="s in submissions" :key="s.id">
+          <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex items-start justify-between gap-4">
+            <div class="space-y-1.5 flex-1 min-w-0">
+              <div class="text-xs text-gray-500" x-text="new Date(s.created_at).toLocaleString('ru')"></div>
+              <template x-for="[k,v] in Object.entries(s.data)" :key="k">
+                <div class="flex gap-2 text-sm">
+                  <span class="text-gray-500 shrink-0" x-text="k + ':'"></span>
+                  <span class="text-gray-200 truncate" x-text="v||'—'"></span>
+                </div>
+              </template>
+            </div>
+            <button @click="deleteSubmission(s)" class="text-gray-600 hover:text-red-400 p-1 rounded hover:bg-gray-700 transition-colors shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="/assets/editor.js"></script>
 <script>
 function txtSize(s){const m={h1:'50px',h2:'30px',h3:'24px',sm:'14px',md:'17px',lg:'20px'};return m[s]||'17px';}
@@ -1030,6 +1082,7 @@ function app(){return{
   siteSettingsSaving:false,
   siteSettingsLoaded:false,
   _headCm:null,
+  subsModal:false,subsLoading:false,submissions:[],_subsBlockId:null,
   pageForm:{title:'',slug:'',is_main:false,slugEdited:false,folder_id:null},
 
   _sortable:null,
@@ -1249,6 +1302,19 @@ function app(){return{
     try{
       await fetch('/admin/api.php?action=saveSettings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.design)});
     }finally{this.designSaving=false;}
+  },
+
+  async openSubmissions(b){
+    this._subsBlockId=b.id;this.submissions=[];this.subsLoading=true;this.subsModal=true;
+    try{
+      const d=await(await fetch('/admin/api.php?action=submissions&block_id='+b.id)).json();
+      this.submissions=d.submissions||[];
+    }finally{this.subsLoading=false;}
+  },
+  async deleteSubmission(s){
+    if(!confirm('Удалить заявку?'))return;
+    const d=await(await fetch('/admin/api.php?action=deleteSubmission',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:s.id})})).json();
+    if(d.ok)this.submissions=this.submissions.filter(x=>x.id!==s.id);
   },
 
   async loadSiteSettings(){

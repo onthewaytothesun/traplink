@@ -133,6 +133,14 @@ function renderPage(array $page, array $blocks, PDO $pdo): void {
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: <?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--theme-screen-background); color: var(--theme-text-color); line-height: 1.6; }
 .page-container { max-width: 640px; margin: 0 auto; }
+.block-form{display:flex;flex-direction:column;gap:12px}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field label{font-size:13px;opacity:.65}
+.form-field input{padding:10px 14px;border:1.5px solid rgba(128,128,128,.25);border-radius:var(--theme-link-border-radius,8px);background:rgba(128,128,128,.07);color:inherit;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s}
+.form-field input:focus{border-color:var(--theme-link-background)}
+.block-form button[type=submit]{padding:12px;border:none;border-radius:var(--theme-link-border-radius,8px);background:var(--theme-link-background);color:var(--theme-link-title-color);font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s;font-family:inherit;width:100%}
+.block-form button[type=submit]:disabled{opacity:.6;cursor:default}
+.form-success{text-align:center;padding:20px 0;font-size:15px;opacity:.65}
 </style>
 <link rel="stylesheet" href="/assets/blocks.css">
 <?php
@@ -173,6 +181,10 @@ body { font-family: <?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,
         foreach ($groupBlocks as $block) {
             $opts = is_array($block['options']) ? $block['options'] : (json_decode($block['options'] ?? '{}', true) ?: []);
             $name = $block['block_type_name'];
+            if ($name === 'form') {
+                $opts['_block_id'] = $block['id'];
+                $opts['_page_id']  = $block['page_id'] ?? '';
+            }
             $html = renderBlock($name, $opts);
             if ($html !== '') {
                 $wrapCls    = blockWrapClass($name, $opts);
@@ -184,6 +196,28 @@ body { font-family: <?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,
     endforeach;
     ?>
 </div>
+<?php
+    // Form JS
+    if (array_filter($blocks, fn($b) => $b['block_type_name'] === 'form' && $b['is_visible'])):
+    ?>
+<script>
+document.querySelectorAll('.block-form').forEach(function(form){
+  form.addEventListener('submit',async function(e){
+    e.preventDefault();
+    var btn=form.querySelector('button[type=submit]'),origText=btn.textContent;
+    var data={};
+    new FormData(form).forEach(function(v,k){data[k]=v;});
+    btn.disabled=true;btn.textContent='Отправляю…';
+    try{
+      var r=await fetch('/submit.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      var d=await r.json();
+      if(d.ok){form.innerHTML='<p class="form-success">Спасибо! Заявка отправлена.</p>';}
+      else{btn.disabled=false;btn.textContent=origText;alert(d.error||'Ошибка отправки');}
+    }catch(err){btn.disabled=false;btn.textContent=origText;alert('Ошибка сети');}
+  });
+});
+</script>
+    <?php endif; ?>
 <?php
     // Timer JS
     if (array_filter($blocks, fn($b) => $b['block_type_name'] === 'timer' && $b['is_visible'])):
@@ -378,6 +412,33 @@ function renderBlock(string $name, array $opts): string {
                 $cls = in_array($m, ['telegram','whatsapp','viber','instagram','vk']) ? $m : 'default';
                 $out .= "<a href=\"$url\" class=\"messenger-btn $cls\">$lbl</a>\n";
             }
+            return $out;
+
+        case 'form':
+            $fields  = $opts['fields'] ?? [];
+            $btnText = htmlspecialchars($opts['form_btn'] ?? 'Отправить');
+            $blockId = htmlspecialchars($opts['_block_id'] ?? '');
+            $pageId  = htmlspecialchars($opts['_page_id']  ?? '');
+            if (!$fields || !$blockId) return '';
+            $typeMap  = [3 => 'text', 5 => 'tel', 6 => 'email'];
+            $phMap    = [3 => 'Имя', 5 => '+7 (___) ___-__-__', 6 => 'email@example.com'];
+            $out  = "<form class=\"block-form\">\n";
+            $out .= "<input type=\"hidden\" name=\"block_id\" value=\"$blockId\">\n";
+            $out .= "<input type=\"hidden\" name=\"page_id\" value=\"$pageId\">\n";
+            foreach ($fields as $field) {
+                $tid  = (int)($field['type_id'] ?? 3);
+                $type = $typeMap[$tid] ?? 'text';
+                $lbl  = htmlspecialchars($field['title'] ?? '');
+                $key  = 'field_' . ($field['idx'] ?? 0);
+                $req  = !empty($field['required']) ? ' required' : '';
+                $ph   = htmlspecialchars($phMap[$tid] ?? '');
+                $out .= "<div class=\"form-field\">";
+                if ($lbl) $out .= "<label>$lbl</label>";
+                $out .= "<input type=\"$type\" name=\"$key\" placeholder=\"$ph\"$req>";
+                $out .= "</div>\n";
+            }
+            $out .= "<button type=\"submit\">$btnText</button>\n";
+            $out .= "</form>";
             return $out;
 
         case 'socialnetworks':
