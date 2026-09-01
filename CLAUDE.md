@@ -1,30 +1,30 @@
-# timeweb / one-way.dev
+# Namecheap / taplink.one-way.dev
 
-Сайт-конструктор на шаред-хостинге Timeweb. Фронтенд-заглушка (Vue) + PHP-бэкенд с админкой блоков.
+Сайт-конструктор на шаред-хостинге Namecheap. Фронтенд-заглушка (Vue) + PHP-бэкенд с админкой блоков.
 
 ## Сервер
 
-- Хост: `vh340.timeweb.ru`, пользователь `cc26299`
-- SSH алиас: `timeweb` (см. `~/.ssh/config`)
-- Веб-корень: `~/public_html/`
-- Живой адрес: **https://timeweb.one-way.dev**
-- PHP 8.1, MySQL (localhost)
+- Хост: `66.29.146.56`, порт SSH: `21098`, пользователь `oneway`
+- SSH ключ: `~/.ssh/id_rsa`
+- Веб-корень: `~/taplink.one-way.dev/`
+- Живой адрес: **https://taplink.one-way.dev**
+- PHP, MySQL (localhost)
 
 ## Деплой
 
 Файлы деплоятся вручную через `scp`:
 
 ```bash
-scp local/file.php timeweb:~/public_html/file.php
+scp -P 21098 local/file.php oneway@66.29.146.56:~/taplink.one-way.dev/file.php
 ```
 
-Локальная копия бэкенда: `/Users/antonfedorov/Documents/Projects/timeweb/`
+Локальная копия: `/Users/antonfedorov/Downloads/phpshtormprojects/traplink/`
 Vue-дашборд: `vue/dashboard/` (Vite + Vue 3 + Tailwind)
 
 ## Структура на сервере
 
 ```
-~/public_html/
+~/taplink.one-way.dev/
 ├── index.php          # Точка входа: рендерит главную страницу из БД или фоллбек на index.html
 ├── index.html         # Старый Vue-дашборд (фоллбек если главная страница не задана)
 ├── pub.php            # Рендерит страницы по /p/{slug}
