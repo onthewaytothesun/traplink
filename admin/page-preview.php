@@ -96,9 +96,9 @@ body{font-family:<?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,Bli
 
 /* ── admin overlay ── */
 .admin-block-wrap{position:relative}
-.section-group{margin-bottom:2px}
-.section-group-label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(129,140,248,.85);padding:4px 10px 2px;border-left:3px solid rgba(99,102,241,.5);background:rgba(99,102,241,.07)}
-.section-group-sortable{border-left:3px solid rgba(99,102,241,.3);background:rgba(99,102,241,.04);min-height:8px}
+.section-group{display:flex;flex-direction:row;margin-bottom:2px}
+.section-group-label{width:18px;flex-shrink:0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;writing-mode:vertical-lr;transform:rotate(180deg);font-size:.52rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(129,140,248,.85);white-space:nowrap;overflow:hidden;background:rgba(99,102,241,.1);border-left:2px solid rgba(99,102,241,.45)}
+.section-group-sortable{flex:1;background:rgba(99,102,241,.04);border-left:1px solid rgba(99,102,241,.2);min-height:8px}
 .section-badge{font-size:.58rem;background:rgba(99,102,241,.2);color:rgba(165,180,252,.95);border-radius:3px;padding:1px 5px;font-weight:600;white-space:nowrap}
 .admin-block-bar{
   display:flex;align-items:center;gap:4px;padding:0 6px;
