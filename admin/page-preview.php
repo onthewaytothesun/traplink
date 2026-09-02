@@ -96,6 +96,9 @@ body{font-family:<?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,Bli
 
 /* ── admin overlay ── */
 .admin-block-wrap{position:relative}
+.admin-block-wrap.in-section{border-left:3px solid rgba(99,102,241,.5);background-image:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(99,102,241,.055) 7px,rgba(99,102,241,.055) 8px)}
+.section-group-header{display:flex;align-items:center;gap:6px;padding:3px 8px 3px 6px;margin-top:6px;font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(129,140,248,1);border-left:3px solid rgba(99,102,241,.5);background:rgba(99,102,241,.1);border-radius:0 4px 4px 0;user-select:none}
+.section-badge{font-size:.58rem;background:rgba(99,102,241,.2);color:rgba(165,180,252,.95);border-radius:3px;padding:1px 5px;font-weight:600;white-space:nowrap}
 .admin-block-bar{
   display:flex;align-items:center;gap:4px;padding:0 6px;
   background:rgba(13,17,23,.3);
@@ -159,21 +162,37 @@ if ($googleFonts) {
 ]; ?>
 <div class="page-container" style="padding-top:24px;">
   <div id="blocksSortable">
-  <?php foreach ($blocks as $block):
+  <?php
+  $sectionMap = [];
+  foreach ($sections as $sec) $sectionMap[$sec['id']] = $sec;
+  $prevSectionId = false;
+  foreach ($blocks as $block):
     $opts       = json_decode($block['options'] ?? '{}', true) ?: [];
     $html       = renderBlock($block['block_type_name'], $opts);
     $hidden     = !$block['is_visible'];
     $wrapCls    = blockWrapClass($block['block_type_name'], $opts);
     $anchorAttr = $block['anchor'] ? ' id="' . htmlspecialchars($block['anchor']) . '"' : '';
     $blockLabel = $blockLabels[$block['block_type_name']] ?? $block['block_type_name'];
+    $secId      = $block['section_id'] ?? '';
+    $secTitle   = $secId ? htmlspecialchars($sectionMap[$secId]['title'] ?? 'Секция') : '';
+    $inSection  = $secId !== '';
+    if ($inSection && $secId !== $prevSectionId):
   ?>
-  <div class="<?= $wrapCls ?> admin-block-wrap" data-block-id="<?= htmlspecialchars($block['id']) ?>"<?= $anchorAttr ?>>
+  <div class="section-group-header">
+    <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    <?= $secTitle ?>
+  </div>
+  <?php endif; $prevSectionId = $secId; ?>
+  <div class="<?= $wrapCls ?> admin-block-wrap<?= $inSection ? ' in-section' : '' ?>" data-block-id="<?= htmlspecialchars($block['id']) ?>"<?= $anchorAttr ?>>
     <!-- Admin overlay bar -->
     <div class="admin-block-bar">
       <span class="drag-handle" title="Перетащить">
         <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
       </span>
       <span style="font-size:.65rem;color:#1f2937;"><?= htmlspecialchars($blockLabel) ?></span>
+      <?php if ($inSection): ?>
+      <span class="section-badge"><?= $secTitle ?></span>
+      <?php endif; ?>
       <?php if ($hidden): ?>
       <span class="text-yellow-500 font-mono" style="font-size:.6rem;">скрыт</span>
       <?php endif; ?>
