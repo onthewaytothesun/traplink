@@ -814,6 +814,7 @@ function previewApp(){return{
   formError:'',
   form:{block_type_id:1,section_id:'',is_visible:true,anchor:''},
   opts:{},optsJson:'{}',
+  sidebarEdit:{open:false,id:'',title:'',slug:'',saving:false},
   designOpen: false,
   designSaving: false,
   design: {
@@ -940,6 +941,26 @@ function previewApp(){return{
     }finally{this.designSaving=false;}
   },
 
+  openSidebarEdit(id,title,slug){
+    this.sidebarEdit={open:true,id,title,slug,saving:false};
+  },
+  async saveSidebarEdit(){
+    this.sidebarEdit.saving=true;
+    await fetch('/admin/api.php?action=updatePage',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:this.sidebarEdit.id,title:this.sidebarEdit.title,slug:this.sidebarEdit.slug})
+    });
+    location.reload();
+  },
+  async sidebarDeletePage(id,title){
+    if(!confirm('Удалить страницу «'+title+'»?')) return;
+    await fetch('/admin/api.php?action=deletePage',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
+    location.href='/admin/';
+  },
+
   init(){
     const s=sessionStorage.getItem('pv_scroll');
     if(s){window.scrollTo(0,parseInt(s));sessionStorage.removeItem('pv_scroll');}
@@ -985,5 +1006,33 @@ function previewApp(){return{
   }
 };}
 </script>
+
+<!-- Page settings modal -->
+<div x-show="sidebarEdit.open" x-cloak
+  class="fixed inset-0 z-50 flex items-center justify-center"
+  style="background:rgba(0,0,0,.6);"
+  @click.self="sidebarEdit.open=false">
+  <div class="rounded-xl p-5 w-80 space-y-3" style="background:#161b22;border:1px solid #30363d">
+    <div class="text-sm font-semibold" style="color:#e6edf3">Настройки страницы</div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Название</label>
+      <input type="text" x-model="sidebarEdit.title" @keydown.enter="saveSidebarEdit()"
+        class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Slug (URL)</label>
+      <input type="text" x-model="sidebarEdit.slug" @keydown.enter="saveSidebarEdit()"
+        class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-500"
+        placeholder="my-page">
+    </div>
+    <div class="flex justify-end gap-2 pt-1">
+      <button @click="sidebarEdit.open=false" class="text-gray-400 hover:text-white px-3 py-1.5 text-sm transition-colors">Отмена</button>
+      <button @click="saveSidebarEdit()" :disabled="sidebarEdit.saving"
+        class="text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+        style="background:#1f6feb"
+        x-text="sidebarEdit.saving?'Сохраняю…':'Сохранить'"></button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
