@@ -275,12 +275,13 @@ function renderBlock(string $name, array $opts): string {
             $subtitle = htmlspecialchars($opts['subtitle'] ?? '');
             $style    = htmlspecialchars($opts['style'] ?? 'one');
             $icon     = $opts['icon'] ?? '';
-            $action   = $opts['action'] ?? 'website';
+            $action   = $opts['action'] ?? $opts['type'] ?? 'website';
             $rawUrl   = $opts['value'] ?? '#';
             $url = match($action) {
                 'telegram' => str_starts_with($rawUrl, 'http') ? $rawUrl : 'https://t.me/' . ltrim($rawUrl, '@/ '),
                 'phone'    => str_starts_with($rawUrl, 'tel:') ? $rawUrl : 'tel:' . preg_replace('/[^+0-9]/', '', $rawUrl),
                 'email'    => str_starts_with($rawUrl, 'mailto:') ? $rawUrl : 'mailto:' . $rawUrl,
+                'page'     => '/p/' . preg_replace('/[^a-z0-9\-]/', '', strtolower($rawUrl)),
                 default    => $rawUrl ?: '#',
             };
             $url = htmlspecialchars($url);
