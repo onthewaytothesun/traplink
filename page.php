@@ -133,14 +133,6 @@ function renderPage(array $page, array $blocks, PDO $pdo): void {
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: <?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--theme-screen-background); color: var(--theme-text-color); line-height: 1.6; }
 .page-container { max-width: 640px; margin: 0 auto; }
-.block-form{display:flex;flex-direction:column;gap:12px}
-.form-field{display:flex;flex-direction:column;gap:5px}
-.form-field label{font-size:13px;opacity:.65}
-.form-field input{padding:10px 14px;border:1.5px solid rgba(128,128,128,.25);border-radius:var(--theme-link-border-radius,8px);background:rgba(128,128,128,.07);color:inherit;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s}
-.form-field input:focus{border-color:var(--theme-link-background)}
-.block-form button[type=submit]{padding:12px;border:none;border-radius:var(--theme-link-border-radius,8px);background:var(--theme-link-background);color:var(--theme-link-title-color);font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s;font-family:inherit;width:100%}
-.block-form button[type=submit]:disabled{opacity:.6;cursor:default}
-.form-success{text-align:center;padding:20px 0;font-size:15px;opacity:.65}
 </style>
 <link rel="stylesheet" href="/assets/blocks.css">
 <?php
