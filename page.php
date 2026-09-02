@@ -176,8 +176,9 @@ body { font-family: <?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,
         $key = $block['section_id'] ?: '';
         $groups[$key][] = $block;
     }
-    foreach ($groups as $groupBlocks):
-        echo "<section class=\"section-main\">\n<div>\n<div>\n";
+    foreach ($groups as $sectionKey => $groupBlocks):
+        $sectionClass = $sectionKey !== '' ? 'section-main blocks-section' : 'section-main';
+        echo "<section class=\"$sectionClass\">\n<div>\n<div>\n";
         foreach ($groupBlocks as $block) {
             $opts = is_array($block['options']) ? $block['options'] : (json_decode($block['options'] ?? '{}', true) ?: []);
             $name = $block['block_type_name'];
