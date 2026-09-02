@@ -421,15 +421,33 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
       </div>
 
       <!-- Section -->
-      <div>
+      <div x-data="{open:false}" class="relative">
         <label class="block text-sm text-gray-400 mb-1.5">Секция</label>
-        <select x-model="form.section_id"
-          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-          <option value="">Без секции</option>
-          <template x-for="s in sections" :key="s.id">
-            <option :value="s.id" x-text="s.title || s.id"></option>
-          </template>
-        </select>
+        <button type="button" @click="open=!open" @keydown.escape="open=false"
+          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between focus:outline-none focus:border-blue-500 transition-colors">
+          <span x-text="form.section_id ? (sections.find(s=>s.id===form.section_id)?.title||'Секция') : 'Без секции'"></span>
+          <svg class="w-4 h-4 text-gray-500 shrink-0 transition-transform" :class="open?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div x-show="open" @click.outside="open=false" x-cloak
+          class="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+          <div class="max-h-48 overflow-y-auto">
+            <button type="button" @click="form.section_id='';open=false"
+              :class="form.section_id===''?'bg-blue-600 text-white':'text-gray-300 hover:bg-gray-700'"
+              class="w-full text-left px-3 py-2 text-sm transition-colors">Без секции</button>
+            <template x-for="s in sections" :key="s.id">
+              <button type="button" @click="form.section_id=s.id;open=false"
+                :class="form.section_id===s.id?'bg-blue-600 text-white':'text-gray-300 hover:bg-gray-700'"
+                class="w-full text-left px-3 py-2 text-sm transition-colors" x-text="s.title||s.id"></button>
+            </template>
+          </div>
+          <div class="border-t border-gray-700">
+            <button type="button" @click="addSection().then(s=>{if(s){form.section_id=s.id;open=false;}})"
+              class="w-full text-left px-3 py-2 text-sm text-blue-400 hover:bg-gray-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Добавить секцию
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- text -->
@@ -759,6 +777,13 @@ function previewApp(){return{
   getLabel(id){return LABELS[id]||'?'},
   getIcon(name){return ICONS[name]||''},
   loadGoogleFont(f){loadGoogleFont(f);},
+  async addSection(){
+    const title=prompt('Название секции:','');
+    if(!title||!title.trim())return null;
+    const d=await(await fetch('/admin/api.php?action=addSection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title.trim(),page_id:<?= json_encode($pageId) ?>})})).json();
+    if(d.ok){this.sections.push(d.section);return d.section;}
+    return null;
+  },
   txtSize(s){return txtSize(s);},
 
   editBlock(id){
