@@ -96,8 +96,8 @@ body{font-family:<?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,Bli
 
 /* ── admin overlay ── */
 .admin-block-wrap{position:relative}
-.admin-block-wrap.in-section{border-left:3px solid rgba(99,102,241,.5);background-image:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(99,102,241,.055) 7px,rgba(99,102,241,.055) 8px)}
-.section-group-header{display:flex;align-items:center;gap:6px;padding:3px 8px 3px 6px;margin-top:6px;font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(129,140,248,1);border-left:3px solid rgba(99,102,241,.5);background:rgba(99,102,241,.1);border-radius:0 4px 4px 0;user-select:none}
+.admin-block-wrap.in-section{border-left:20px solid rgba(99,102,241,.13);background-image:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(99,102,241,.05) 7px,rgba(99,102,241,.05) 8px)}
+.section-label-vert{position:absolute;left:0;width:20px;top:26px;bottom:0;display:flex;align-items:flex-start;justify-content:center;padding-top:6px;writing-mode:vertical-lr;transform:rotate(180deg);font-size:.52rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(129,140,248,.85);white-space:nowrap;pointer-events:none;overflow:hidden}
 .section-badge{font-size:.58rem;background:rgba(99,102,241,.2);color:rgba(165,180,252,.95);border-radius:3px;padding:1px 5px;font-weight:600;white-space:nowrap}
 .admin-block-bar{
   display:flex;align-items:center;gap:4px;padding:0 6px;
@@ -176,14 +176,11 @@ if ($googleFonts) {
     $secId      = $block['section_id'] ?? '';
     $secTitle   = $secId ? htmlspecialchars($sectionMap[$secId]['title'] ?? 'Секция') : '';
     $inSection  = $secId !== '';
-    if ($inSection && $secId !== $prevSectionId):
-  ?>
-  <div class="section-group-header">
-    <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
-    <?= $secTitle ?>
-  </div>
-  <?php endif; $prevSectionId = $secId; ?>
+    $prevSectionId = $secId; ?>
   <div class="<?= $wrapCls ?> admin-block-wrap<?= $inSection ? ' in-section' : '' ?>" data-block-id="<?= htmlspecialchars($block['id']) ?>"<?= $anchorAttr ?>>
+    <?php if ($inSection): ?>
+    <div class="section-label-vert"><?= $secTitle ?></div>
+    <?php endif; ?>
     <!-- Admin overlay bar -->
     <div class="admin-block-bar">
       <span class="drag-handle" title="Перетащить">
