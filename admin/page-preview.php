@@ -189,10 +189,10 @@ if ($googleFonts) {
       $vurl = $opts['url'] ?? '';
       if (preg_match('/(?:youtube\.com\/watch\?.*v=|youtu\.be\/)([a-zA-Z0-9_\-]+)/i', $vurl, $vm)) {
         $vid = htmlspecialchars($vm[1]);
-        $html = '<div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:4px;overflow:hidden;">'
-              . '<img src="https://img.youtube.com/vi/' . $vid . '/hqdefault.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85;">'
-              . '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">'
-              . '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="24" fill="rgba(0,0,0,.55)"/><polygon points="19,16 35,24 19,32" fill="#fff"/></svg>'
+        $html = '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:#000;">'
+              . '<img src="https://img.youtube.com/vi/' . $vid . '/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover;opacity:.85;display:block;">'
+              . '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">'
+              . '<svg width="44" height="44" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="24" fill="rgba(0,0,0,.55)"/><polygon points="19,16 35,24 19,32" fill="#fff"/></svg>'
               . '</div></div>';
       } else {
         $html = '<div style="padding:10px;background:rgba(0,0,0,.08);border-radius:4px;font-size:.8rem;text-align:center;color:#6b7280;">Видео</div>';
@@ -205,7 +205,9 @@ if ($googleFonts) {
     $anchorAttr = $block['anchor'] ? ' id="' . htmlspecialchars($block['anchor']) . '"' : '';
     $blockLabel = $blockLabels[$block['block_type_name']] ?? $block['block_type_name'];
     $id         = htmlspecialchars($block['id']);
-    echo '<div class="' . $wrapCls . ' admin-block-wrap" data-block-id="' . $id . '"' . $anchorAttr . '>';
+    // Override block-video CSS (padding-bottom:56.25%;background:#000) — not needed in admin
+    $wrapStyle  = $block['block_type_name'] === 'video' ? ' style="padding-bottom:0;background:transparent;"' : '';
+    echo '<div class="' . $wrapCls . ' admin-block-wrap" data-block-id="' . $id . '"' . $anchorAttr . $wrapStyle . '>';
     echo '<div class="admin-block-bar">';
     echo '<span class="drag-handle" title="Перетащить"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg></span>';
     echo '<span style="font-size:.65rem;color:#1f2937;">' . htmlspecialchars($blockLabel) . '</span>';
