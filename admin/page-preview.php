@@ -189,8 +189,15 @@ if ($googleFonts) {
       $opts['_block_id'] = $block['id'];
       $opts['_page_id']  = $block['page_id'] ?? '';
     }
+    // HTML/zero blocks — show source as escaped text, don't execute
+    if ($block['block_type_name'] === 'html' || $block['block_type_name'] === 'zero') {
+      $src = trim($opts['html'] ?? '');
+      $html = $src
+        ? '<pre style="margin:0;padding:8px 10px;background:rgba(0,0,0,.06);border-radius:6px;font-size:.72rem;color:#6b7280;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow:hidden;">'
+          . htmlspecialchars($src) . '</pre>'
+        : '<div style="padding:8px 10px;background:rgba(0,0,0,.06);border-radius:6px;font-size:.75rem;color:#9ca3af;text-align:center;">HTML</div>';
     // For video blocks render a thumbnail instead of a live iframe (iframe stacking covers the bar)
-    if ($block['block_type_name'] === 'video') {
+    } elseif ($block['block_type_name'] === 'video') {
       $vurl = $opts['url'] ?? '';
       if (preg_match('/(?:youtube\.com\/watch\?.*v=|youtu\.be\/)([a-zA-Z0-9_\-]+)/i', $vurl, $vm)) {
         $vid = htmlspecialchars($vm[1]);
