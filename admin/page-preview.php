@@ -96,7 +96,7 @@ body{font-family:<?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,Bli
 
 /* ── admin overlay ── */
 .admin-block-wrap{position:relative}
-.admin-block-wrap.in-section{border-left:20px solid rgba(99,102,241,.13);background-image:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(99,102,241,.05) 7px,rgba(99,102,241,.05) 8px)}
+.admin-block-wrap.in-section{border-left:20px solid rgba(99,102,241,.13);background-image:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(99,102,241,.05) 7px,rgba(99,102,241,.05) 8px);background-attachment:fixed}
 .section-label-vert{position:absolute;left:0;width:20px;top:26px;bottom:0;display:flex;align-items:flex-start;justify-content:center;padding-top:6px;writing-mode:vertical-lr;transform:rotate(180deg);font-size:.52rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(129,140,248,.85);white-space:nowrap;pointer-events:none;overflow:hidden}
 .section-badge{font-size:.58rem;background:rgba(99,102,241,.2);color:rgba(165,180,252,.95);border-radius:3px;padding:1px 5px;font-weight:600;white-space:nowrap}
 .admin-block-bar{
