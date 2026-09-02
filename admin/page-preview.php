@@ -184,7 +184,22 @@ if ($googleFonts) {
   // Helper closure to render a single block wrap
   $renderBlockWrap = function($block) use ($blockLabels) {
     $opts       = json_decode($block['options'] ?? '{}', true) ?: [];
-    $html       = renderBlock($block['block_type_name'], $opts);
+    // For video blocks render a thumbnail instead of a live iframe (iframe stacking covers the bar)
+    if ($block['block_type_name'] === 'video') {
+      $vurl = $opts['url'] ?? '';
+      if (preg_match('/(?:youtube\.com\/watch\?.*v=|youtu\.be\/)([a-zA-Z0-9_\-]+)/i', $vurl, $vm)) {
+        $vid = htmlspecialchars($vm[1]);
+        $html = '<div style="position:relative;padding-bottom:56.25%;background:#000;border-radius:4px;overflow:hidden;">'
+              . '<img src="https://img.youtube.com/vi/' . $vid . '/hqdefault.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85;">'
+              . '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">'
+              . '<svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="24" fill="rgba(0,0,0,.55)"/><polygon points="19,16 35,24 19,32" fill="#fff"/></svg>'
+              . '</div></div>';
+      } else {
+        $html = '<div style="padding:10px;background:rgba(0,0,0,.08);border-radius:4px;font-size:.8rem;text-align:center;color:#6b7280;">Видео</div>';
+      }
+    } else {
+      $html = renderBlock($block['block_type_name'], $opts);
+    }
     $hidden     = !$block['is_visible'];
     $wrapCls    = blockWrapClass($block['block_type_name'], $opts);
     $anchorAttr = $block['anchor'] ? ' id="' . htmlspecialchars($block['anchor']) . '"' : '';
