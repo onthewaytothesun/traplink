@@ -302,6 +302,18 @@ switch ($action) {
         echo json_encode(['ok' => true]);
         break;
 
+    case 'reorderFull':
+        foreach (($body['blocks'] ?? []) as $i => $item) {
+            $bid = $item['id'] ?? '';
+            $sid = ($item['section_id'] ?? '') ?: null;
+            if ($bid) {
+                $pdo->prepare("UPDATE `tap_blocks` SET `sort_order`=?,`section_id`=? WHERE `id`=?")
+                    ->execute([$i * 10, $sid, $bid]);
+            }
+        }
+        echo json_encode(['ok' => true]);
+        break;
+
     case 'getSettings':
         try {
             $rows = $pdo->query("SELECT `setting_key`, `setting_value` FROM `tap_settings`")

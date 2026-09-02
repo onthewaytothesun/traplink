@@ -96,8 +96,9 @@ body{font-family:<?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,Bli
 
 /* ── admin overlay ── */
 .admin-block-wrap{position:relative}
-.admin-block-wrap.in-section{border-left:20px solid rgba(99,102,241,.13);background-image:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(99,102,241,.05) 7px,rgba(99,102,241,.05) 8px);background-attachment:fixed}
-.section-label-vert{position:absolute;left:0;width:20px;top:26px;bottom:0;display:flex;align-items:flex-start;justify-content:center;padding-top:6px;writing-mode:vertical-lr;transform:rotate(180deg);font-size:.52rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(129,140,248,.85);white-space:nowrap;pointer-events:none;overflow:hidden}
+.section-group{margin-bottom:2px}
+.section-group-label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(129,140,248,.85);padding:4px 10px 2px;border-left:3px solid rgba(99,102,241,.5);background:rgba(99,102,241,.07)}
+.section-group-sortable{border-left:3px solid rgba(99,102,241,.3);background:rgba(99,102,241,.04);min-height:8px}
 .section-badge{font-size:.58rem;background:rgba(99,102,241,.2);color:rgba(165,180,252,.95);border-radius:3px;padding:1px 5px;font-weight:600;white-space:nowrap}
 .admin-block-bar{
   display:flex;align-items:center;gap:4px;padding:0 6px;
@@ -165,61 +166,62 @@ if ($googleFonts) {
   <?php
   $sectionMap = [];
   foreach ($sections as $sec) $sectionMap[$sec['id']] = $sec;
-  $prevSectionId = false;
-  foreach ($blocks as $block):
+
+  // Build consecutive runs: group blocks by section_id
+  $runs = [];
+  foreach ($blocks as $block) {
+    $sid = $block['section_id'] ?? '';
+    $last = count($runs) - 1;
+    if ($sid !== '' && $last >= 0 && $runs[$last]['type'] === 'section' && $runs[$last]['sid'] === $sid) {
+      $runs[$last]['blocks'][] = $block;
+    } elseif ($sid !== '') {
+      $runs[] = ['type' => 'section', 'sid' => $sid, 'blocks' => [$block]];
+    } else {
+      $runs[] = ['type' => 'block', 'block' => $block];
+    }
+  }
+
+  // Helper closure to render a single block wrap
+  $renderBlockWrap = function($block) use ($blockLabels) {
     $opts       = json_decode($block['options'] ?? '{}', true) ?: [];
     $html       = renderBlock($block['block_type_name'], $opts);
     $hidden     = !$block['is_visible'];
     $wrapCls    = blockWrapClass($block['block_type_name'], $opts);
     $anchorAttr = $block['anchor'] ? ' id="' . htmlspecialchars($block['anchor']) . '"' : '';
     $blockLabel = $blockLabels[$block['block_type_name']] ?? $block['block_type_name'];
-    $secId      = $block['section_id'] ?? '';
-    $secTitle   = $secId ? htmlspecialchars($sectionMap[$secId]['title'] ?? 'Секция') : '';
-    $inSection  = $secId !== '';
-    $prevSectionId = $secId; ?>
-  <div class="<?= $wrapCls ?> admin-block-wrap<?= $inSection ? ' in-section' : '' ?>" data-block-id="<?= htmlspecialchars($block['id']) ?>"<?= $anchorAttr ?>>
-    <?php if ($inSection): ?>
-    <div class="section-label-vert"><?= $secTitle ?></div>
-    <?php endif; ?>
-    <!-- Admin overlay bar -->
-    <div class="admin-block-bar">
-      <span class="drag-handle" title="Перетащить">
-        <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
-      </span>
-      <span style="font-size:.65rem;color:#1f2937;"><?= htmlspecialchars($blockLabel) ?></span>
-      <?php if ($inSection): ?>
-      <span class="section-badge"><?= $secTitle ?></span>
-      <?php endif; ?>
-      <?php if ($hidden): ?>
-      <span class="text-yellow-500 font-mono" style="font-size:.6rem;">скрыт</span>
-      <?php endif; ?>
-      <div class="flex-1"></div>
-      <!-- toggle visibility -->
-      <button class="admin-btn <?= $hidden ? 'vis-off' : '' ?>" title="<?= $hidden ? 'Показать' : 'Скрыть' ?>"
-        @click.stop="toggleVis('<?= htmlspecialchars($block['id']) ?>')">
-        <?php if ($hidden): ?>
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-        <?php else: ?>
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-        <?php endif; ?>
-      </button>
-      <!-- edit -->
-      <button class="admin-btn" title="Редактировать" @click.stop="editBlock('<?= htmlspecialchars($block['id']) ?>')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-      </button>
-      <!-- delete -->
-      <button class="admin-btn danger" title="Удалить" @click.stop="deleteBlock('<?= htmlspecialchars($block['id']) ?>')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-      </button>
-    </div>
-    <!-- Block content -->
-    <div class="admin-block-content<?= $hidden ? ' is-hidden' : '' ?>">
-      <?php if ($html !== ''): echo $html;
-      else: ?>
-      <div style="padding:10px;background:rgba(255,255,255,.05);border-radius:6px;color:rgba(255,255,255,.35);font-size:.8rem;text-align:center;">[<?= htmlspecialchars($block['block_type_name']) ?>]</div>
-      <?php endif; ?>
+    $id         = htmlspecialchars($block['id']);
+    echo '<div class="' . $wrapCls . ' admin-block-wrap" data-block-id="' . $id . '"' . $anchorAttr . '>';
+    echo '<div class="admin-block-bar">';
+    echo '<span class="drag-handle" title="Перетащить"><svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg></span>';
+    echo '<span style="font-size:.65rem;color:#1f2937;">' . htmlspecialchars($blockLabel) . '</span>';
+    if ($hidden) echo '<span class="text-yellow-500 font-mono" style="font-size:.6rem;">скрыт</span>';
+    echo '<div class="flex-1"></div>';
+    // toggle visibility
+    $eyeOff = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>';
+    $eyeOn  = '<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>';
+    echo '<button class="admin-btn ' . ($hidden ? 'vis-off' : '') . '" title="' . ($hidden ? 'Показать' : 'Скрыть') . '" @click.stop="toggleVis(\'' . $id . '\')">' . ($hidden ? $eyeOff : $eyeOn) . '</button>';
+    echo '<button class="admin-btn" title="Редактировать" @click.stop="editBlock(\'' . $id . '\')"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>';
+    echo '<button class="admin-btn danger" title="Удалить" @click.stop="deleteBlock(\'' . $id . '\')"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>';
+    echo '</div>'; // admin-block-bar
+    echo '<div class="admin-block-content' . ($hidden ? ' is-hidden' : '') . '">';
+    if ($html !== '') { echo $html; }
+    else { echo '<div style="padding:10px;background:rgba(255,255,255,.05);border-radius:6px;color:rgba(255,255,255,.35);font-size:.8rem;text-align:center;">[' . htmlspecialchars($block['block_type_name']) . ']</div>'; }
+    echo '</div>'; // admin-block-content
+    echo '</div>'; // admin-block-wrap
+  };
+
+  foreach ($runs as $run):
+    if ($run['type'] === 'section'):
+      $sid      = htmlspecialchars($run['sid']);
+      $secTitle = htmlspecialchars($sectionMap[$run['sid']]['title'] ?? 'Секция');
+  ?>
+  <div class="section-group" data-section-id="<?= $sid ?>">
+    <div class="section-group-label"><?= $secTitle ?></div>
+    <div class="section-group-sortable" data-section-id="<?= $sid ?>">
+      <?php foreach ($run['blocks'] as $block) { $renderBlockWrap($block); } ?>
     </div>
   </div>
+  <?php else: $renderBlockWrap($run['block']); endif; ?>
   <?php endforeach; ?>
   </div>
 
@@ -902,18 +904,44 @@ function previewApp(){return{
     const s=sessionStorage.getItem('pv_scroll');
     if(s){window.scrollTo(0,parseInt(s));sessionStorage.removeItem('pv_scroll');}
 
-    const el=document.getElementById('blocksSortable');
-    if(el&&window.Sortable){
-      Sortable.create(el,{
-        handle:'.drag-handle',
-        animation:150,
-        onEnd:async()=>{
-          const ids=[...el.querySelectorAll('[data-block-id]')].map(e=>e.dataset.blockId);
-          await fetch('/admin/api.php?action=reorder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
-          sessionStorage.setItem('pv_scroll',window.scrollY);location.reload();
+    if(!window.Sortable) return;
+
+    async function reorderFull(){
+      const result=[];
+      document.querySelectorAll('#blocksSortable > *').forEach(el=>{
+        if(el.dataset.blockId){
+          result.push({id:el.dataset.blockId,section_id:null});
+        } else if(el.classList.contains('section-group')){
+          const sid=el.dataset.sectionId;
+          el.querySelectorAll('[data-block-id]').forEach(b=>{
+            result.push({id:b.dataset.blockId,section_id:sid});
+          });
         }
       });
+      await fetch('/admin/api.php?action=reorderFull',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocks:result})});
+      sessionStorage.setItem('pv_scroll',window.scrollY);
+      location.reload();
     }
+
+    const mainEl=document.getElementById('blocksSortable');
+    if(mainEl){
+      Sortable.create(mainEl,{
+        handle:'.drag-handle',
+        draggable:'.admin-block-wrap',
+        group:'blocks',
+        animation:150,
+        onEnd:reorderFull
+      });
+    }
+    document.querySelectorAll('.section-group-sortable').forEach(el=>{
+      Sortable.create(el,{
+        handle:'.drag-handle',
+        draggable:'.admin-block-wrap',
+        group:'blocks',
+        animation:150,
+        onEnd:reorderFull
+      });
+    });
   }
 };}
 </script>
