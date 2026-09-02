@@ -694,8 +694,26 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
       <!-- banner -->
       <template x-if="typeName(form.block_type_id) === 'banner'">
         <div class="space-y-3">
-          <div><label class="block text-xs text-gray-500 mb-1">URL картинки</label>
-            <input type="text" x-model="opts.picture" class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="https://…/image.jpg"></div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Картинка</label>
+            <div x-show="opts.picture" class="mb-2 rounded-lg overflow-hidden">
+              <img :src="opts.picture" class="w-full h-auto block" style="max-height:160px;object-fit:cover;">
+            </div>
+            <label class="flex items-center justify-center gap-2 w-full cursor-pointer bg-gray-800 border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2.5 text-sm transition-colors"
+              @click.prevent="$refs.bannerFile.click()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span x-text="opts.picture ? 'Заменить' : 'Загрузить картинку'"></span>
+            </label>
+            <input type="file" x-ref="bannerFile" class="hidden" accept="image/*"
+              @change="async function(e){
+                const f=e.target.files[0]; if(!f) return;
+                const fd=new FormData(); fd.append('file',f);
+                const r=await fetch('/admin/upload.php',{method:'POST',body:fd});
+                const d=await r.json();
+                if(d.url) opts.picture=d.url;
+                e.target.value='';
+              }($event)">
+          </div>
           <div><label class="block text-xs text-gray-500 mb-1">Ссылка при клике</label>
             <input type="text" x-model="opts.link" class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="https://example.com"></div>
         </div>
