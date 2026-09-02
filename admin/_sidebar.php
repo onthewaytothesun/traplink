@@ -19,9 +19,9 @@
   <nav class="flex-1 overflow-y-auto sb p-2 space-y-0.5">
     <?php foreach ($sidebarPages as $pg):
       $isActive = $pg['id'] === $sidebarCurrentId;
-      $pgId    = json_encode($pg['id']);
-      $pgTitle = json_encode($pg['title']);
-      $pgSlug  = json_encode($pg['slug'] ?? '');
+      $pgId    = htmlspecialchars(json_encode($pg['id']),    ENT_QUOTES);
+      $pgTitle = htmlspecialchars(json_encode($pg['title']), ENT_QUOTES);
+      $pgSlug  = htmlspecialchars(json_encode($pg['slug'] ?? ''), ENT_QUOTES);
     ?>
     <div class="relative group">
       <a href="/admin/page-preview.php?page_id=<?= htmlspecialchars($pg['id']) ?>"
