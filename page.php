@@ -424,7 +424,7 @@ function renderBlock(string $name, array $opts): string {
             if (!$fields || !$blockId) return '';
             $typeMap  = [3 => 'text', 5 => 'tel', 6 => 'email'];
             $phMap    = [3 => 'Имя', 5 => '+7 (___) ___-__-__', 6 => 'email@example.com'];
-            $out  = "<form class=\"block-form\">\n";
+            $out  = "<form class=\"block-form has-form-normal\">\n";
             $out .= "<input type=\"hidden\" name=\"block_id\" value=\"$blockId\">\n";
             $out .= "<input type=\"hidden\" name=\"page_id\" value=\"$pageId\">\n";
             foreach ($fields as $field) {
