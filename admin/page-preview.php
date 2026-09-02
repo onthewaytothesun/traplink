@@ -184,6 +184,11 @@ if ($googleFonts) {
   // Helper closure to render a single block wrap
   $renderBlockWrap = function($block) use ($blockLabels) {
     $opts       = json_decode($block['options'] ?? '{}', true) ?: [];
+    // Inject context required by form renderer (same as page.php does in renderPage)
+    if ($block['block_type_name'] === 'form') {
+      $opts['_block_id'] = $block['id'];
+      $opts['_page_id']  = $block['page_id'] ?? '';
+    }
     // For video blocks render a thumbnail instead of a live iframe (iframe stacking covers the bar)
     if ($block['block_type_name'] === 'video') {
       $vurl = $opts['url'] ?? '';
