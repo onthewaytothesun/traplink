@@ -1,5 +1,5 @@
 <?php
-session_start();
+require __DIR__ . '/_session.php';
 
 if (!($_SESSION['admin_auth'] ?? false)) {
     http_response_code(401);
@@ -64,6 +64,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `tap_blocks` (
 // Migrate old tables: add page_id if missing, add theme column
 foreach ([
     "ALTER TABLE `tap_sections` ADD COLUMN `page_id` varchar(64) DEFAULT NULL",
+    "ALTER TABLE `tap_sections` ADD COLUMN `options` longtext DEFAULT NULL",
     "ALTER TABLE `tap_blocks` ADD COLUMN `page_id` varchar(64) DEFAULT NULL",
     "ALTER TABLE `tap_pages` ADD COLUMN `theme` longtext DEFAULT NULL",
     "ALTER TABLE `tap_pages` ADD COLUMN `folder_id` varchar(64) DEFAULT NULL",
@@ -97,10 +98,55 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `tap_submissions` (
     KEY `idx_page` (`page_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS `tap_payments` (
+    `id` varchar(64) NOT NULL,
+    `provider` varchar(32) NOT NULL,
+    `label` varchar(128) NOT NULL DEFAULT '',
+    `credentials` longtext,
+    `is_active` tinyint(1) NOT NULL DEFAULT 0,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS `tap_orders` (
+    `id` varchar(64) NOT NULL,
+    `deal_id` varchar(255) NOT NULL,
+    `payment_id` varchar(64) NOT NULL COMMENT 'FK tap_payments',
+    `amount` int NOT NULL COMMENT 'kopecks',
+    `currency` varchar(3) NOT NULL DEFAULT 'RUB',
+    `status` varchar(16) NOT NULL DEFAULT 'pending',
+    `form_url` text,
+    `callback_data` longtext,
+    `custom_params` longtext,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `paid_at` timestamp NULL DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_deal` (`deal_id`),
+    KEY `idx_payment` (`payment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS `tap_products` (
+    `id` varchar(64) NOT NULL,
+    `title` varchar(255) NOT NULL DEFAULT '',
+    `price` int NOT NULL DEFAULT 0 COMMENT 'kopecks',
+    `currency` varchar(3) NOT NULL DEFAULT 'RUB',
+    `image_url` varchar(512) DEFAULT NULL,
+    `success_page_id` varchar(64) DEFAULT NULL COMMENT 'FK tap_pages — page after payment',
+    `is_active` tinyint(1) NOT NULL DEFAULT 1,
+    `sort_order` int NOT NULL DEFAULT 0,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
 $action = $_GET['action'] ?? '';
 $body   = $_SERVER['REQUEST_METHOD'] === 'POST'
     ? (json_decode(file_get_contents('php://input'), true) ?? [])
     : [];
+
+if (in_array($action, ['templates', 'savePageTemplate', 'createFromTemplate', 'deleteTemplate', 'savePageDesign'], true)) {
+    require __DIR__ . '/template-api.php';
+    exit;
+}
 
 switch ($action) {
 
@@ -131,20 +177,8 @@ switch ($action) {
         break;
 
     case 'updatePage':
-        $id       = $body['id'] ?? '';
-        $title    = substr(trim($body['title'] ?? ''), 0, 255);
-        $slug     = preg_replace('/[^a-z0-9\-]/', '', strtolower($body['slug'] ?? ''));
-        $theme    = json_encode($body['theme'] ?? []);
-        $folderId = array_key_exists('folder_id', $body) ? (($body['folder_id'] ?? '') ?: null) : false;
-        if ($id && $title) {
-            if ($folderId !== false) {
-                $pdo->prepare("UPDATE `tap_pages` SET `title`=?,`slug`=?,`theme`=?,`folder_id`=? WHERE `id`=?")
-                    ->execute([$title, $slug, $theme, $folderId, $id]);
-            } else {
-                $pdo->prepare("UPDATE `tap_pages` SET `title`=?,`slug`=?,`theme`=? WHERE `id`=?")
-                    ->execute([$title, $slug, $theme, $id]);
-            }
-        }
+        require_once dirname(__DIR__) . '/includes/page-metadata.php';
+        updatePageMetadata($pdo, $body);
         echo json_encode(['ok' => true]);
         break;
 
@@ -211,7 +245,11 @@ switch ($action) {
         } else {
             $stmt = $pdo->query("SELECT * FROM `tap_sections` ORDER BY `sort_order`,`created_at`");
         }
-        echo json_encode(['sections' => $stmt->fetchAll()]);
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$r) {
+            $r['options'] = json_decode($r['options'] ?: '{}', true) ?: (object)[];
+        }
+        echo json_encode(['sections' => $rows]);
         break;
 
     case 'addSection':
@@ -223,8 +261,17 @@ switch ($action) {
         $pdo->prepare("INSERT INTO `tap_sections` (`id`,`title`,`sort_order`,`page_id`) VALUES (?,?,?,?)")
             ->execute([$id, $title, $ord + 10, $pageId]);
         echo json_encode(['ok' => true, 'section' => [
-            'id' => $id, 'title' => $title, 'sort_order' => $ord + 10, 'page_id' => $pageId,
+            'id' => $id, 'title' => $title, 'sort_order' => $ord + 10, 'page_id' => $pageId, 'options' => (object)[],
         ]]);
+        break;
+
+    case 'updateSection':
+        $id   = $body['id'] ?? '';
+        $opts = json_encode($body['options'] ?? []);
+        if ($id) {
+            $pdo->prepare("UPDATE `tap_sections` SET `options`=? WHERE `id`=?")->execute([$opts, $id]);
+        }
+        echo json_encode(['ok' => true]);
         break;
 
     case 'deleteSection':
@@ -380,18 +427,220 @@ switch ($action) {
             'head_code'       => $rows['head_code']       ?? '',
             'seo_title'       => $rows['seo_title']       ?? '',
             'seo_description' => $rows['seo_description'] ?? '',
+            'favicon_url'     => $rows['favicon_url']     ?? '',
         ]]);
         break;
 
     case 'saveSiteSettings':
         $stmt = $pdo->prepare("INSERT INTO `tap_settings` (`setting_key`,`setting_value`) VALUES (?,?) ON DUPLICATE KEY UPDATE `setting_value`=VALUES(`setting_value`)");
-        foreach (['head_code', 'seo_title', 'seo_description'] as $k) {
+        foreach (['head_code', 'seo_title', 'seo_description', 'favicon_url'] as $k) {
             if (array_key_exists($k, $body)) {
                 $stmt->execute([$k, (string)($body[$k] ?? '')]);
             }
         }
         echo json_encode(['ok' => true]);
         break;
+
+    // ── Payments ────────────────────────────────────────────────────────────
+
+    case 'payments':
+        $rows = $pdo->query("SELECT `id`,`provider`,`label`,`credentials`,`is_active`,`created_at` FROM `tap_payments` ORDER BY `created_at`")->fetchAll();
+        foreach ($rows as &$r) {
+            $r['is_active']   = (bool)(int)$r['is_active'];
+            $r['credentials'] = json_decode($r['credentials'] ?: '{}', true) ?: (object)[];
+        }
+        echo json_encode(['payments' => $rows]);
+        break;
+
+    case 'savePayment': {
+        $id       = trim($body['id'] ?? '');
+        $provider = preg_replace('/[^a-z0-9_]/', '', $body['provider'] ?? '');
+        $label    = substr(trim($body['label'] ?? ''), 0, 128);
+        $creds    = json_encode($body['credentials'] ?? []);
+        $active   = (int)!empty($body['is_active']);
+        if (!$provider) { echo json_encode(['error' => 'provider required']); break; }
+        if (!$id) {
+            $id = bin2hex(random_bytes(8));
+            $pdo->prepare("INSERT INTO `tap_payments` (`id`,`provider`,`label`,`credentials`,`is_active`) VALUES (?,?,?,?,?)")
+                ->execute([$id, $provider, $label, $creds, $active]);
+        } else {
+            $pdo->prepare("UPDATE `tap_payments` SET `provider`=?,`label`=?,`credentials`=?,`is_active`=? WHERE `id`=?")
+                ->execute([$provider, $label, $creds, $active, $id]);
+        }
+        echo json_encode(['ok' => true, 'id' => $id]);
+        break;
+    }
+
+    case 'togglePayment': {
+        $id = trim($body['id'] ?? '');
+        if ($id) $pdo->prepare("UPDATE `tap_payments` SET `is_active`=NOT `is_active` WHERE `id`=?")->execute([$id]);
+        $stmt = $pdo->prepare("SELECT `is_active` FROM `tap_payments` WHERE `id`=?");
+        $stmt->execute([$id]);
+        echo json_encode(['ok' => true, 'is_active' => (bool)(int)$stmt->fetchColumn()]);
+        break;
+    }
+
+    case 'deletePayment': {
+        $id = trim($body['id'] ?? '');
+        if ($id) $pdo->prepare("DELETE FROM `tap_payments` WHERE `id`=?")->execute([$id]);
+        echo json_encode(['ok' => true]);
+        break;
+    }
+
+    // ── Orders ─────────────────────────────────────────────────────────────
+
+    case 'orders':
+        $rows = $pdo->query("SELECT `id`,`deal_id`,`amount`,`currency`,`status`,`created_at`,`paid_at` FROM `tap_orders` ORDER BY `created_at` DESC LIMIT 50")->fetchAll();
+        echo json_encode(['orders' => $rows]);
+        break;
+
+    case 'initPayment': {
+        // Create a GetPlatinum payment via init-payment-url
+        $amountRub  = floatval($body['amount'] ?? 0);
+        $posName    = trim($body['position_name'] ?? 'Оплата');
+        $clientId   = trim($body['client_id'] ?? ('c-' . bin2hex(random_bytes(4))));
+        $clientEmail = trim($body['client_email'] ?? '');
+        $clientPhone = trim($body['client_phone'] ?? '');
+        $successUrl  = trim($body['success_url'] ?? '');
+        $failUrl     = trim($body['fail_url'] ?? '');
+        $customParams = $body['custom_params'] ?? [];
+
+        if ($amountRub <= 0) { echo json_encode(['error' => 'amount required']); break; }
+
+        // Get active GetPlatinum config
+        $pm = $pdo->query("SELECT * FROM `tap_payments` WHERE `provider`='getplatinum' AND `is_active`=1 LIMIT 1")->fetch();
+        if (!$pm) { echo json_encode(['error' => 'GetPlatinum не подключён или отключён']); break; }
+
+        $creds   = json_decode($pm['credentials'] ?: '{}', true);
+        $apiKey  = $creds['api_key'] ?? '';
+        $baseUrl = rtrim($creds['base_url'] ?? 'https://example.getplatinum.ru/api/public/v2/pay', '/');
+        $vat     = $creds['vat'] ?? 'none';
+        $prefix  = intval($creds['position_prefix'] ?? 12);
+
+        if (!$apiKey) { echo json_encode(['error' => 'API-ключ не задан']); break; }
+
+        $amountKop = intval(round($amountRub * 100));
+        $dealId    = 'D-' . bin2hex(random_bytes(8));
+        $orderId   = bin2hex(random_bytes(8));
+
+        $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host      = $_SERVER['HTTP_HOST'] ?? '';
+        $notifyUrl = $scheme . '://' . $host . '/payment-callback.php';
+        if (!$successUrl) $successUrl = $scheme . '://' . $host . '/';
+
+        $clientParams = ['clientId' => $clientId];
+        if ($clientEmail) $clientParams['email'] = $clientEmail;
+        if ($clientPhone) $clientParams['phone'] = $clientPhone;
+
+        $payload = [
+            'dealId'          => $dealId,
+            'amount'          => $amountKop,
+            'currency'        => 'RUB',
+            'positions'       => [[
+                'prefix'   => $prefix,
+                'name'     => $posName,
+                'price'    => $amountKop,
+                'quantity' => 1,
+                'vat'      => $vat,
+            ]],
+            'clientParams'    => $clientParams,
+            'notificationUrl' => $notifyUrl,
+            'successUrl'      => $successUrl,
+        ];
+        if ($failUrl) $payload['failUrl'] = $failUrl;
+        if ($customParams) $payload['customParams'] = $customParams;
+
+        $ch = curl_init($baseUrl . '/init-payment-url');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 30,
+        ]);
+        $resp = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $data = json_decode($resp, true);
+
+        if ($httpCode !== 200 || !empty($data['errorCode'])) {
+            echo json_encode(['error' => $data['errorMessage'] ?? "HTTP $httpCode", 'raw' => $data]);
+            break;
+        }
+
+        // Save order
+        $pdo->prepare("INSERT INTO `tap_orders` (`id`,`deal_id`,`payment_id`,`amount`,`currency`,`status`,`form_url`,`custom_params`) VALUES (?,?,?,?,?,?,?,?)")
+            ->execute([$orderId, $dealId, $pm['id'], $amountKop, 'RUB', 'pending', $data['formUrl'] ?? '', json_encode($customParams)]);
+
+        echo json_encode(['ok' => true, 'deal_id' => $dealId, 'form_url' => $data['formUrl'] ?? '', 'order_id' => $orderId]);
+        break;
+    }
+
+    case 'paymentStatus': {
+        $dealId = trim($body['deal_id'] ?? '');
+        if (!$dealId) { echo json_encode(['error' => 'deal_id required']); break; }
+
+        $order = $pdo->prepare("SELECT * FROM `tap_orders` WHERE `deal_id`=?");
+        $order->execute([$dealId]);
+        $order = $order->fetch();
+        if (!$order) { echo json_encode(['error' => 'order not found']); break; }
+
+        echo json_encode(['ok' => true, 'order' => [
+            'deal_id' => $order['deal_id'],
+            'amount'  => (int)$order['amount'],
+            'status'  => $order['status'],
+            'paid_at' => $order['paid_at'],
+        ]]);
+        break;
+    }
+
+    // ── Products ────────────────────────────────────────────────────────
+
+    case 'products':
+        $rows = $pdo->query("SELECT * FROM `tap_products` ORDER BY `sort_order`, `created_at`")->fetchAll();
+        foreach ($rows as &$r) {
+            $r['price']     = (int)$r['price'];
+            $r['is_active'] = (bool)(int)$r['is_active'];
+            $r['sort_order'] = (int)$r['sort_order'];
+        }
+        echo json_encode(['products' => $rows]);
+        break;
+
+    case 'saveProduct': {
+        $id       = trim($body['id'] ?? '');
+        $title    = substr(trim($body['title'] ?? ''), 0, 255);
+        $price    = max(0, intval($body['price'] ?? 0));
+        $currency = strtoupper(substr(trim($body['currency'] ?? 'RUB'), 0, 3)) ?: 'RUB';
+        $imageUrl = substr(trim($body['image_url'] ?? ''), 0, 512) ?: null;
+        $successPageId = ($body['success_page_id'] ?? '') ?: null;
+        $active   = (int)!empty($body['is_active']);
+
+        if (!$title) { echo json_encode(['error' => 'title required']); break; }
+        if ($price <= 0) { echo json_encode(['error' => 'price required']); break; }
+
+        if (!$id) {
+            $id  = 'prod-' . bin2hex(random_bytes(4));
+            $ord = (int)$pdo->query("SELECT COALESCE(MAX(sort_order),0) FROM `tap_products`")->fetchColumn();
+            $pdo->prepare("INSERT INTO `tap_products` (`id`,`title`,`price`,`currency`,`image_url`,`success_page_id`,`is_active`,`sort_order`) VALUES (?,?,?,?,?,?,?,?)")
+                ->execute([$id, $title, $price, $currency, $imageUrl, $successPageId, $active, $ord + 10]);
+        } else {
+            $pdo->prepare("UPDATE `tap_products` SET `title`=?,`price`=?,`currency`=?,`image_url`=?,`success_page_id`=?,`is_active`=? WHERE `id`=?")
+                ->execute([$title, $price, $currency, $imageUrl, $successPageId, $active, $id]);
+        }
+        echo json_encode(['ok' => true, 'id' => $id]);
+        break;
+    }
+
+    case 'deleteProduct': {
+        $id = trim($body['id'] ?? '');
+        if ($id) $pdo->prepare("DELETE FROM `tap_products` WHERE `id`=?")->execute([$id]);
+        echo json_encode(['ok' => true]);
+        break;
+    }
 
     default:
         echo json_encode(['error' => 'unknown action']);

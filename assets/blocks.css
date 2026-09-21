@@ -52,6 +52,11 @@
 /* media (icon+text) */
 .media-item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(128,128,128,.15)}
 .media-item:last-child{border:0}
+.media-item-thumb{flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center}
+.media-item-thumb img{width:40px;height:40px;object-fit:contain}
+.media-item-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--theme-text-color)}
+.media-item-icon svg{width:28px;height:28px}
+.media-item-text{flex:1;min-width:0}
 .media-item-text .title{font-weight:600;margin-bottom:4px;color:var(--theme-text-color)}
 .media-item-text .text{color:var(--theme-text-color);opacity:.7;font-size:.9rem}
 
@@ -74,7 +79,20 @@
 .messenger-btn.viber{background:#7360F2}
 .messenger-btn.instagram{background:#E1306C}
 .messenger-btn.vk{background:#0077FF}
+.messenger-btn.max{background:#0077FF}
 .messenger-btn.default{background:#555}
+
+/* music player */
+.music-player{background:rgba(0,0,0,.05);border-radius:12px;padding:12px 16px;margin-bottom:8px}
+.music-player-title{font-weight:500;margin-bottom:8px;font-size:.9rem}
+.music-player audio{width:100%;height:40px}
+
+/* plans */
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.plan-card{border:1px solid rgba(0,0,0,.1);border-radius:12px;padding:20px;text-align:center}
+.plan-title{font-weight:600;font-size:1.1rem;margin-bottom:6px}
+.plan-desc{font-size:.85rem;opacity:.7;margin-bottom:10px}
+.plan-price{font-weight:700;font-size:1.3rem}
 
 /* social networks */
 .block-social{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
@@ -99,8 +117,25 @@
 .block-form{display:flex;flex-direction:column;gap:12px}
 .form-field{display:flex;flex-direction:column;gap:5px}
 .form-field label{font-size:13px;opacity:.65}
-.form-field input{padding:10px 14px;border:1.5px solid rgba(128,128,128,.25);border-radius:var(--theme-link-border-radius,8px);background:rgba(128,128,128,.07);color:inherit;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s}
-.form-field input:focus{border-color:var(--theme-link-background)}
-.block-form button[type=submit]{padding:12px;border:none;border-radius:var(--theme-link-border-radius,8px);background:var(--theme-link-background);color:var(--theme-link-title-color);font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s;font-family:inherit;width:100%}
+.form-field input,.form-field select{padding:10px 14px;border:1.5px solid rgba(128,128,128,.25);border-radius:var(--theme-link-border-radius,8px);background:rgba(128,128,128,.07);color:inherit;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;width:100%;box-sizing:border-box}
+.form-field input:focus,.form-field select:focus{border-color:var(--theme-link-background)}
+.form-field input[type=checkbox],.form-field input[type=radio]{width:auto;padding:0}
+.form-checkbox-label{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.form-checkbox-label input{width:18px;height:18px;margin:0;accent-color:var(--theme-link-background,#007bff)}
+.form-radio-group{display:flex;flex-direction:column;gap:6px}
+.form-radio-label{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;opacity:1}
+.form-radio-label input{width:18px;height:18px;margin:0;accent-color:var(--theme-link-background,#007bff)}
 .block-form button[type=submit]:disabled{opacity:.6;cursor:default}
 .form-success{text-align:center;padding:20px 0;font-size:15px;opacity:.65}
+
+/* pictures slider */
+.block-slider{display:block}
+.block-slider-inner{overflow:hidden;border-radius:var(--block-radius,8px)}
+.slider-pictures .slider-inner{display:flex;transition:transform .45s ease;will-change:transform}
+.slider-pictures .slider-slide{min-width:100%;max-width:100%;flex-shrink:0}
+.picture-container{width:100%;aspect-ratio:1/1;background-size:cover;background-position:center;border-radius:var(--block-radius,8px)}
+.slider-nav{padding:8px 0;text-align:center;font-size:0}
+.slider-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background-color:var(--dot-color,var(--block-pictures-nav-color,#333));opacity:.3;cursor:pointer;margin:0 4px;transition:opacity .15s,background-color .15s}
+.slider-dot.active{opacity:1}
+.block-slider.is-indicator-square .slider-dot{border-radius:2px}
+.block-slider.is-indicator-line .slider-dot{width:20px;height:5px;border-radius:3px}

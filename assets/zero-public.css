@@ -1,0 +1,2 @@
+.zero-public{width:100%;min-width:0}.zero-public-mobile{display:none}
+@container zero (max-width:599px){.zero-public-desktop{display:none}.zero-public-mobile{display:block}}

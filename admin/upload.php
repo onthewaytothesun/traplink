@@ -1,5 +1,5 @@
 <?php
-session_start();
+require __DIR__ . '/_session.php';
 
 if (!($_SESSION['admin_auth'] ?? false)) {
     http_response_code(401);
@@ -15,14 +15,14 @@ if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-$allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+$allowed = ['image/jpeg'=>'jpg','image/png'=>'png','image/gif'=>'gif','image/webp'=>'webp','image/x-icon'=>'ico','image/vnd.microsoft.icon'=>'ico','image/svg+xml'=>'svg','audio/mpeg'=>'mp3','audio/mp4'=>'m4a','audio/ogg'=>'ogg','audio/wav'=>'wav','audio/x-wav'=>'wav','audio/flac'=>'flac'];
 $mime = mime_content_type($file['tmp_name']);
-if (!in_array($mime, $allowed, true)) {
+if (!array_key_exists($mime, $allowed)) {
     echo json_encode(['error' => 'Invalid file type']);
     exit;
 }
 
-$ext = ['image/jpeg'=>'jpg','image/png'=>'png','image/gif'=>'gif','image/webp'=>'webp'][$mime];
+$ext = $allowed[$mime];
 $name = bin2hex(random_bytes(8)) . '.' . $ext;
 $dir  = dirname(__DIR__) . '/uploads/';
 $dest = $dir . $name;

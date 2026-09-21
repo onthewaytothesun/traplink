@@ -21,6 +21,9 @@
       <button @click="activeTab='pages'"
         :class="activeTab==='pages'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Страницы</button>
+      <button @click="activeTab='templates'"
+        :class="activeTab==='templates'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
+        class="px-3 py-1.5 rounded-lg text-sm transition-colors">Шаблоны</button>
       <button @click="activeTab='design';loadSettings()"
         :class="activeTab==='design'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Дизайн</button>
@@ -39,6 +42,7 @@
     <?php else: ?>
       <a href="/admin/"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors text-gray-500 hover:text-gray-200 hover:bg-gray-800 no-underline">Страницы</a>
+      <a href="/admin/?tab=templates" class="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:text-gray-200 no-underline">Шаблоны</a>
       <button @click="designOpen=!designOpen"
         :class="designOpen?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Дизайн</button>
@@ -51,6 +55,7 @@
   </div>
   <div class="flex items-center gap-2 shrink-0">
     <?php if ($navMode === 'preview'): ?>
+    <button type="button" class="tpl-save-button" @click="$dispatch('save-page-template', {page: <?= htmlspecialchars(json_encode(['id'=>$navPage['id'],'title'=>$navPage['title']], JSON_UNESCAPED_UNICODE), ENT_QUOTES) ?>})">Сохранить как шаблон</button>
     <a href="<?= htmlspecialchars($navLiveUrl) ?>" target="_blank"
        class="flex items-center gap-1.5 text-gray-500 hover:text-white hover:bg-white/5 px-2.5 py-1.5 rounded-lg transition-colors text-sm no-underline">
       Открыть

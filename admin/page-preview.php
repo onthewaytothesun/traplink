@@ -1,5 +1,5 @@
 <?php
-session_start();
+require __DIR__ . '/_session.php';
 
 if (!($_SESSION['admin_auth'] ?? false)) {
     header('Location: /admin/');
@@ -47,7 +47,7 @@ $sections = $stmtSections->fetchAll();
 
 require dirname(__DIR__) . '/page.php';
 
-$theme = getGlobalTheme($pdo);
+$theme = getPageTheme($pdo, $page);
 $bgColor   = sanitizeCssColor($theme['screen']     ?? '#ffffff', '#ffffff');
 $textColor = sanitizeCssColor($theme['text_color'] ?? '#343a40', '#343a40');
 $linkBg    = sanitizeCssColor($theme['link_bg']    ?? '#ffffff', '#ffffff');
@@ -72,6 +72,8 @@ $liveUrl   = $page['is_main'] ? '/' : ($page['slug'] ? '/p/' . $page['slug'] : '
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><path fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' d='M7 10h18M7 14h18M7 18h12M7 22h8'/></svg>">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="/admin/js/sidebar.js"></script>
+<script src="/admin/js/templates.js?v=1"></script>
+<link rel="stylesheet" href="/assets/templates.css?v=1">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <link rel="stylesheet" href="/assets/taplink-frontend.css">
@@ -133,14 +135,16 @@ body{font-family:<?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,Bli
 .admin-add-placeholder{
   display:flex;align-items:center;justify-content:center;gap:8px;
   width:100%;padding:12px;margin-top:4px;
-  border:2px dashed rgba(255,255,255,.12);border-radius:10px;
-  color:rgba(255,255,255,.35);background:transparent;cursor:pointer;
+  border:2px dashed var(--adm-border-s);border-radius:10px;
+  color:var(--adm-muted);background:transparent;cursor:pointer;
   font-size:.875rem;transition:all .15s;
 }
-.admin-add-placeholder:hover{border-color:rgba(255,255,255,.28);color:rgba(255,255,255,.6);background:rgba(255,255,255,.04)}
+.admin-add-placeholder:hover{border-color:var(--adm-subtle);color:var(--adm-text);background:var(--adm-row-hover)}
 .sb::-webkit-scrollbar{width:5px}.sb::-webkit-scrollbar-track{background:transparent}.sb::-webkit-scrollbar-thumb{background:var(--adm-scroll,#374151);border-radius:3px}
 </style>
 <link rel="stylesheet" href="/assets/blocks.css">
+<link rel="stylesheet" href="/assets/zero-public.css?v=1">
+<link rel="stylesheet" href="/assets/zero-editor.css?v=1">
 <?php
 if ($pageFont) {
     echo "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=" . rawurlencode($pageFont) . ":wght@400;600;700&display=swap\">\n";
@@ -207,7 +211,9 @@ if ($googleFonts) {
       $opts['_page_id']  = $block['page_id'] ?? '';
     }
     // HTML/zero blocks — show source as escaped text, don't execute
-    if ($block['block_type_name'] === 'html' || $block['block_type_name'] === 'zero') {
+    if ($block['block_type_name'] === 'zero' && is_array($opts['zero'] ?? null)) {
+        $html = renderZeroBlock($opts['zero']);
+    } elseif ($block['block_type_name'] === 'html' || $block['block_type_name'] === 'zero') {
       $src = trim($opts['html'] ?? '');
       $html = $src
         ? '<pre style="margin:0;padding:8px 10px;background:rgba(0,0,0,.06);border-radius:6px;font-size:.72rem;color:#6b7280;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow:hidden;">'
@@ -431,6 +437,8 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
 
   <!-- Save footer -->
   <div class="shrink-0 px-4 py-3" style="border-top:1px solid #21262d;background:#161b22">
+    <p x-show="localDesign" class="text-xs text-gray-400 mb-2">Изменения применяются только к этой странице.</p>
+    <p x-show="designError" x-text="designError" class="text-xs text-red-400 mb-2" role="alert"></p>
     <button @click="saveDesign()" :disabled="designSaving"
       class="w-full text-white py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
       style="background:#1f6feb;color:white"
@@ -692,13 +700,37 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
 
       <!-- break -->
       <template x-if="typeName(form.block_type_id) === 'break'">
-        <div class="space-y-3">
-          <div><label class="block text-xs text-gray-500 mb-1">Высота (px)</label>
-            <input type="number" x-model.number="opts.height" class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm" placeholder="20" min="0" max="300"></div>
-          <div><label class="block text-xs text-gray-500 mb-1">Стиль</label>
-            <select x-model="opts.style" class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm">
-              <option value="none">Без линии</option><option value="line">Линия</option><option value="dashed">Пунктир</option>
-            </select></div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-gray-500 mb-2">Стиль</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" @click="opts.style='none'"
+                :class="(!opts.style||opts.style==='none')?'border-blue-500 bg-blue-600/10':'border-gray-700 hover:border-gray-500'"
+                class="border rounded-lg p-3 flex flex-col items-center gap-2 transition-colors cursor-pointer">
+                <div class="w-full h-8 flex items-center justify-center"></div>
+                <span class="text-xs" :class="(!opts.style||opts.style==='none')?'text-blue-400':'text-gray-500'">Отступ</span>
+              </button>
+              <button type="button" @click="opts.style='line'"
+                :class="opts.style==='line'?'border-blue-500 bg-blue-600/10':'border-gray-700 hover:border-gray-500'"
+                class="border rounded-lg p-3 flex flex-col items-center gap-2 transition-colors cursor-pointer">
+                <div class="w-full h-8 flex items-center"><div class="w-full border-t border-gray-400"></div></div>
+                <span class="text-xs" :class="opts.style==='line'?'text-blue-400':'text-gray-500'">Линия</span>
+              </button>
+              <button type="button" @click="opts.style='dashed'"
+                :class="opts.style==='dashed'?'border-blue-500 bg-blue-600/10':'border-gray-700 hover:border-gray-500'"
+                class="border rounded-lg p-3 flex flex-col items-center gap-2 transition-colors cursor-pointer">
+                <div class="w-full h-8 flex items-center"><div class="w-full border-t border-dashed border-gray-400"></div></div>
+                <span class="text-xs" :class="opts.style==='dashed'?'text-blue-400':'text-gray-500'">Пунктир</span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1.5">Высота</label>
+            <div class="flex items-center gap-3">
+              <input type="range" x-model.number="opts.height" min="0" max="200" class="flex-1 accent-blue-500">
+              <span class="text-sm text-gray-400 font-mono w-12 text-right" x-text="(opts.height||20)+'px'"></span>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -714,8 +746,17 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
         </div>
       </template>
 
-      <!-- html / zero -->
-      <template x-if="['html','zero'].includes(typeName(form.block_type_id))">
+      <template x-if="typeName(form.block_type_id) === 'zero'">
+        <div class="zero-editor-launch">
+          <p>Свободный холст с текстом, изображениями, кнопками и фигурами. Каждый элемент — отдельный слой.</p>
+          <button type="button" @click="ZeroEditor.open(opts, data => { opts = { ...opts, zero: data }; })">Открыть редактор слоёв</button>
+          <p x-show="opts.zero" style="margin-top:10px" x-text="'Слоёв: ' + (opts.zero?.layers?.length || 0) + '. После редактирования сохраните блок.'"></p>
+          <details x-show="!opts.zero"><summary>HTML существующего блока</summary><p>HTML сохранится, но после применения слоёв страница будет показывать макет из редактора. Автоматического разбора HTML на слои нет.</p><textarea x-model="opts.html" rows="5"></textarea></details>
+        </div>
+      </template>
+
+      <!-- Legacy HTML -->
+      <template x-if="typeName(form.block_type_id) === 'html'">
         <div><label class="block text-xs text-gray-500 mb-1">HTML</label>
           <textarea x-model="opts.html" rows="7" class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-blue-500" placeholder="<div>...</div>"></textarea></div>
       </template>
@@ -780,6 +821,235 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
         </div>
       </template>
 
+      <!-- messenger -->
+      <template x-if="typeName(form.block_type_id) === 'messenger'">
+        <div class="space-y-3">
+          <template x-for="(item, idx) in (opts.items||[])" :key="idx">
+            <div class="flex items-start gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <div class="flex-1 space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-xs text-gray-500 mb-1">Мессенджер</label>
+                    <select x-model="item.messenger" class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm">
+                      <option value="telegram">Telegram</option>
+                      <option value="whatsapp">WhatsApp</option>
+                      <option value="viber">Viber</option>
+                      <option value="instagram">Instagram</option>
+                      <option value="vk">ВКонтакте</option>
+                      <option value="max">MAX</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-500 mb-1"
+                      x-text="({telegram:'Юзернейм',whatsapp:'Номер',viber:'Номер',instagram:'Юзернейм',vk:'ID/username',max:'Юзернейм'})[item.messenger]||'Значение'"></label>
+                    <input type="text" x-model="item.v"
+                      class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                      :placeholder="({telegram:'username',whatsapp:'79991234567',viber:'79991234567',instagram:'username',vk:'id123',max:'username'})[item.messenger]||''">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Подпись (необязательно)</label>
+                  <input type="text" x-model="item.t"
+                    class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="Написать в Telegram">
+                </div>
+              </div>
+              <button type="button" @click="opts.items.splice(idx,1)" class="text-gray-600 hover:text-red-400 p-1 transition-colors shrink-0 mt-5" title="Удалить">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </template>
+          <button type="button" @click="if(!opts.items)opts.items=[];opts.items.push({messenger:'telegram',v:'',t:'',i:null})"
+            class="w-full border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2 text-sm transition-colors flex items-center justify-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Добавить мессенджер
+          </button>
+        </div>
+      </template>
+
+      <!-- socialnetworks -->
+      <template x-if="typeName(form.block_type_id) === 'socialnetworks'">
+        <div class="space-y-3">
+          <template x-for="(item, idx) in (opts.items||[])" :key="idx">
+            <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <div class="flex-1 grid grid-cols-[120px_1fr] gap-2">
+                <select x-model="item.type" class="bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm">
+                  <option value="instagram">Instagram</option>
+                  <option value="vk">ВКонтакте</option>
+                  <option value="telegram">Telegram</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="twitter">Twitter / X</option>
+                  <option value="tiktok">TikTok</option>
+                </select>
+                <input type="text" x-model="item.link"
+                  class="bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                  :placeholder="({instagram:'https://instagram.com/…',vk:'https://vk.com/…',telegram:'https://t.me/…',youtube:'https://youtube.com/…',facebook:'https://facebook.com/…',twitter:'https://x.com/…',tiktok:'https://tiktok.com/@…'})[item.type]||'https://…'">
+              </div>
+              <button type="button" @click="opts.items.splice(idx,1)" class="text-gray-600 hover:text-red-400 p-1 transition-colors shrink-0" title="Удалить">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </template>
+          <button type="button" @click="if(!opts.items)opts.items=[];opts.items.push({type:'instagram',link:''})"
+            class="w-full border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2 text-sm transition-colors flex items-center justify-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Добавить соцсеть
+          </button>
+        </div>
+      </template>
+
+      <!-- music -->
+      <template x-if="typeName(form.block_type_id) === 'music'">
+        <div class="space-y-3">
+          <template x-for="(item, idx) in (opts.items||[])" :key="idx">
+            <div class="flex items-start gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <div class="flex-1 space-y-2">
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Источник</label>
+                  <select x-model="item.type" class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm">
+                    <option value="file">Загрузить файл</option>
+                    <option value="spotify">Spotify</option>
+                    <option value="yandex">Яндекс Музыка</option>
+                    <option value="apple">Apple Music</option>
+                  </select>
+                </div>
+                <template x-if="item.type==='file'">
+                  <div class="space-y-2">
+                    <div>
+                      <label class="block text-xs text-gray-500 mb-1">Название</label>
+                      <input type="text" x-model="item.title"
+                        class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                        placeholder="Название трека">
+                    </div>
+                    <div x-show="item.value" class="flex items-center gap-2 text-xs text-gray-400 bg-gray-900 rounded-lg px-3 py-2">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
+                      <span class="truncate" x-text="item.value"></span>
+                    </div>
+                    <label class="flex items-center justify-center gap-2 w-full cursor-pointer bg-gray-800 border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2.5 text-sm transition-colors">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                      <span x-text="item.value ? 'Заменить файл' : 'Загрузить аудио'"></span>
+                      <input type="file" class="hidden" accept="audio/*"
+                        @change="async function(e){
+                          const f=e.target.files[0]; if(!f) return;
+                          const fd=new FormData(); fd.append('file',f);
+                          const r=await fetch('/admin/upload.php',{method:'POST',body:fd});
+                          const d=await r.json();
+                          if(d.url){item.value=d.url; if(!item.title)item.title=f.name.replace(/\.[^.]+$/,'');}
+                          e.target.value='';
+                        }($event)">
+                    </label>
+                  </div>
+                </template>
+                <template x-if="item.type!=='file'">
+                  <div>
+                    <label class="block text-xs text-gray-500 mb-1">Ссылка</label>
+                    <input type="text" x-model="item.value"
+                      class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                      :placeholder="({spotify:'https://open.spotify.com/track/…',yandex:'https://music.yandex.ru/album/…/track/…',apple:'https://music.apple.com/…'})[item.type]||'https://…'">
+                  </div>
+                </template>
+              </div>
+              <button type="button" @click="opts.items.splice(idx,1)" class="text-gray-600 hover:text-red-400 p-1 transition-colors shrink-0 mt-5" title="Удалить">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </template>
+          <button type="button" @click="if(!opts.items)opts.items=[];opts.items.push({type:'file',value:'',title:''})"
+            class="w-full border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2 text-sm transition-colors flex items-center justify-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Добавить трек
+          </button>
+        </div>
+      </template>
+
+      <!-- pricing -->
+      <template x-if="typeName(form.block_type_id) === 'pricing'">
+        <div class="space-y-3">
+          <template x-for="(item, idx) in (opts.fields||[])" :key="idx">
+            <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <div class="flex-1 grid grid-cols-[1fr_100px] gap-2">
+                <input type="text" x-model="item.title"
+                  class="bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                  placeholder="Название">
+                <input type="number" x-model.number="item.price"
+                  class="bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                  placeholder="Цена">
+              </div>
+              <button type="button" @click="opts.fields.splice(idx,1)" class="text-gray-600 hover:text-red-400 p-1 transition-colors shrink-0" title="Удалить">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </template>
+          <button type="button" @click="if(!opts.fields)opts.fields=[];opts.fields.push({title:'',price:0})"
+            class="w-full border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2 text-sm transition-colors flex items-center justify-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Добавить позицию
+          </button>
+        </div>
+      </template>
+
+      <!-- collapse (FAQ) -->
+      <template x-if="typeName(form.block_type_id) === 'collapse'">
+        <div class="space-y-3">
+          <template x-for="(item, idx) in (opts.fields||[])" :key="idx">
+            <div class="flex items-start gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <div class="flex-1 space-y-2">
+                <input type="text" x-model="item.title"
+                  class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                  placeholder="Вопрос">
+                <textarea x-model="item.text" rows="2"
+                  class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                  placeholder="Ответ"></textarea>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" x-model="item.opened" class="rounded accent-blue-500">
+                  <span class="text-xs text-gray-500">Раскрыт по умолчанию</span>
+                </label>
+              </div>
+              <button type="button" @click="opts.fields.splice(idx,1)" class="text-gray-600 hover:text-red-400 p-1 transition-colors shrink-0" title="Удалить">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </template>
+          <button type="button" @click="if(!opts.fields)opts.fields=[];opts.fields.push({title:'',text:'',opened:false})"
+            class="w-full border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2 text-sm transition-colors flex items-center justify-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Добавить вопрос
+          </button>
+        </div>
+      </template>
+
+      <!-- plans -->
+      <template x-if="typeName(form.block_type_id) === 'plans'">
+        <div class="space-y-3">
+          <template x-for="(item, idx) in (opts.fields||[])" :key="idx">
+            <div class="flex items-start gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
+              <div class="flex-1 space-y-2">
+                <div class="grid grid-cols-[1fr_100px] gap-2">
+                  <input type="text" x-model="item.title"
+                    class="bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="Название тарифа">
+                  <input type="number" x-model.number="item.price"
+                    class="bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="Цена">
+                </div>
+                <textarea x-model="item.description" rows="2"
+                  class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                  placeholder="Описание (необязательно)"></textarea>
+              </div>
+              <button type="button" @click="opts.fields.splice(idx,1)" class="text-gray-600 hover:text-red-400 p-1 transition-colors shrink-0" title="Удалить">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </template>
+          <button type="button" @click="if(!opts.fields)opts.fields=[];opts.fields.push({title:'',price:0,description:''})"
+            class="w-full border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2 text-sm transition-colors flex items-center justify-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Добавить тариф
+          </button>
+        </div>
+      </template>
+
       <!-- JSON fallback -->
       <template x-if="JSON_TYPES.includes(typeName(form.block_type_id))">
         <div>
@@ -824,6 +1094,8 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
 </div>
 
 <script src="/assets/editor.js"></script>
+<script src="/assets/zero-model.js?v=1"></script>
+<script src="/assets/zero-editor.js?v=1"></script>
 <script>
 const PAGE_ID = <?= json_encode($pageId) ?>;
 const BLOCKS  = <?= json_encode($blocks, JSON_UNESCAPED_UNICODE) ?>;
@@ -838,7 +1110,9 @@ function previewApp(){return{
   formError:'',
   form:{block_type_id:1,section_id:'',is_visible:true,anchor:''},
   opts:{},optsJson:'{}',
-  designOpen: false,
+  designOpen: new URLSearchParams(location.search).get('design')==='1',
+  designError: '',
+  localDesign: <?= isset((json_decode($page['theme'] ?? '{}', true) ?: [])['_template_design']) ? 'true' : 'false' ?>,
   designSaving: false,
   design: {
     screen:            <?= json_encode($theme['screen']           ?? '#ffffff') ?>,
@@ -893,8 +1167,23 @@ function previewApp(){return{
 
   selectType(id){
     this.form.block_type_id=id;
-    this.opts={};
-    this.optsJson=PLACEHOLDERS[this.typeName(id)]||'{}';
+    const name=this.typeName(id);
+    if(name==='messenger'){
+      this.opts={items:[{messenger:'telegram',v:'',t:'',i:null}]};
+    }else if(name==='socialnetworks'){
+      this.opts={items:[{type:'instagram',link:''}]};
+    }else if(name==='music'){
+      this.opts={items:[{type:'file',value:'',title:''}]};
+    }else if(name==='pricing'){
+      this.opts={fields:[{title:'',price:0}]};
+    }else if(name==='collapse'){
+      this.opts={fields:[{title:'',text:'',opened:false}]};
+    }else if(name==='plans'){
+      this.opts={fields:[{title:'',price:0,description:''}]};
+    }else{
+      this.opts={};
+    }
+    this.optsJson=PLACEHOLDERS[name]||'{}';
   },
 
   async saveBlock(){
@@ -957,13 +1246,16 @@ function previewApp(){return{
     document.body.style.fontFamily=this.design.page_font?(this.design.page_font+',sans-serif'):'';
   },
   async saveDesign(){
-    this.designSaving=true;
+    this.designSaving=true;this.designError='';
     try{
-      await fetch('/admin/api.php?action=saveSettings',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(this.design)
+      const action=this.localDesign?'savePageDesign':'saveSettings';
+      const payload=this.localDesign?{page_id:PAGE_ID,design:this.design}:this.design;
+      const response=await fetch('/admin/api.php?action='+action,{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
       });
-    }finally{this.designSaving=false;}
+      const data=await response.json();
+      if(!response.ok||data.error)throw new Error(data.error||'Не удалось сохранить дизайн');
+    }catch(e){this.designError=e.message;}finally{this.designSaving=false;}
   },
 
   init(){
@@ -1012,5 +1304,6 @@ function previewApp(){return{
 };}
 </script>
 
+<?php require __DIR__ . '/_template-save.php'; ?>
 </body>
 </html>

@@ -1,0 +1,475 @@
+.ze-dialog {
+  --ze-line:#e2e5ea;
+  --ze-ink:#202633;
+  --ze-muted:#747c89;
+  --ze-accent:#2563eb;
+  position:fixed;
+  inset:0;
+  width:100vw;
+  max-width:none;
+  height:100dvh;
+  max-height:none;
+  margin:0;
+  padding:0;
+  border:0;
+  background:#f5f6f8;
+  color:var(--ze-ink);
+  font:13px/1.45 Arial,sans-serif;
+  color-scheme:light;
+  overflow:hidden;
+}
+.ze-dialog[open] {
+  display:flex;
+  flex-direction:column;
+}
+.ze-dialog::backdrop {
+  background:#141b2bcc;
+}
+.ze-dialog * {
+  box-sizing:border-box;
+}
+.ze-dialog button,.ze-dialog input,.ze-dialog select,.ze-dialog textarea {
+  font:inherit;
+  color:inherit;
+}
+.ze-dialog button {
+  cursor:pointer;
+  border:1px solid var(--ze-line);
+  border-radius:6px;
+  background:white;
+  padding:7px 10px;
+  white-space:nowrap;
+}
+.ze-dialog button:hover {
+  background:#f0f4fc;
+  border-color:#b9c9e4;
+}
+.ze-dialog button:disabled {
+  opacity:.4;
+  cursor:default;
+}
+.ze-dialog button:focus-visible,.ze-dialog input:focus-visible,.ze-dialog select:focus-visible,.ze-dialog textarea:focus-visible {
+  outline:2px solid var(--ze-accent);
+  outline-offset:2px;
+}
+.ze-header {
+  height:64px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  border-bottom:1px solid var(--ze-line);
+  background:white;
+  gap:16px;
+}
+.ze-header>div {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.ze-header strong {
+  font-size:17px;
+}
+.ze-muted {
+  color:var(--ze-muted);
+  margin-left:10px;
+}
+.ze-dialog .ze-primary {
+  background:var(--ze-accent);
+  color:white;
+  border-color:var(--ze-accent);
+}
+.ze-device {
+  background:#f2f4f7;
+  padding:3px;
+  border-radius:8px;
+}
+.ze-device button {
+  border:0;
+  background:transparent;
+}
+.ze-device button[aria-pressed=true] {
+  background:white;
+  color:var(--ze-accent);
+  box-shadow:0 1px 3px #0001;
+}
+.ze-toolbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 16px;
+  background:white;
+  border-bottom:1px solid var(--ze-line);
+  gap:12px;
+  flex-shrink:0;
+}
+.ze-toolbar>div {
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.ze-snap {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin:0 12px;
+  white-space:nowrap;
+}
+.ze-dialog select {
+  padding:7px;
+  border:1px solid var(--ze-line);
+  border-radius:5px;
+  background:white;
+}
+.ze-layout {
+  display:grid;
+  grid-template-columns:220px minmax(0,1fr) 264px;
+  min-height:0;
+  flex:1;
+}
+.ze-layers,.ze-properties {
+  background:white;
+  overflow:auto;
+}
+.ze-layers {
+  border-right:1px solid var(--ze-line);
+  display:flex;
+  flex-direction:column;
+}
+.ze-properties {
+  padding:16px;
+  border-left:1px solid var(--ze-line);
+}
+.ze-panel-heading {
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.4px;
+  color:var(--ze-muted);
+  margin-bottom:16px;
+  display:flex;
+  justify-content:space-between;
+}
+.ze-layers>.ze-panel-heading {
+  padding:20px 16px 0;
+}
+.ze-layer-list {
+  flex:1;
+  overflow:auto;
+}
+.ze-layer-row {
+  display:flex;
+  align-items:center;
+  padding:3px 6px;
+  gap:2px;
+  border-left:3px solid transparent;
+}
+.ze-layer-row.is-selected {
+  background:#edf3ff;
+  border-left-color:var(--ze-accent);
+}
+.ze-layer-row button {
+  border:0;
+  background:transparent;
+  padding:7px 5px;
+}
+.ze-layer-row .ze-layer-name {
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left;
+}
+.ze-kind {
+  display:inline-block;
+  width:22px;
+  color:var(--ze-muted);
+}
+.ze-layer-actions {
+  display:flex;
+  gap:8px;
+  padding:12px;
+  border-top:1px solid var(--ze-line);
+}
+.ze-layer-actions button {
+  flex:1;
+}
+.ze-hint {
+  font-size:11px;
+  color:var(--ze-muted);
+  line-height:1.6;
+  margin:12px 0;
+}
+.ze-layers>.ze-hint {
+  padding:0 16px;
+}
+.ze-workspace {
+  overflow:auto;
+  padding:24px 32px;
+  background:#edeff3;
+  touch-action:none;
+}
+.ze-canvas-label {
+  font-size:10px;
+  letter-spacing:1px;
+  color:var(--ze-muted);
+  margin-bottom:8px;
+}
+.ze-canvas-space {
+  position:relative;
+  box-shadow:0 4px 24px #28334b12;
+}
+.ze-canvas {
+  position:absolute;
+  transform-origin:top left;
+  overflow:hidden;
+  isolation:isolate;
+}
+.ze-canvas.with-grid {
+  background-image:radial-gradient(#64748b30 .7px,transparent .7px);
+  background-size:8px 8px;
+}
+.ze-element {
+  position:absolute;
+  box-sizing:border-box;
+  line-height:1.25;
+  cursor:move;
+  user-select:none;
+}
+.ze-element.is-locked {
+  cursor:default;
+}
+.ze-element.is-selected {
+  outline:1.5px solid var(--ze-accent);
+}
+.ze-content {
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  border-radius:inherit;
+}
+.ze-content-button {
+  display:flex;
+  align-items:inherit;
+  justify-content:inherit;
+}
+.ze-content img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  pointer-events:none;
+}
+.ze-image-placeholder {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  width:100%;
+  height:100%;
+  background:#eef1f5;
+  color:#8c96a7;
+  font-size:36px;
+  border:1px dashed #bcc4d0;
+}
+.ze-image-placeholder small {
+  font-size:12px;
+}
+.ze-handle {
+  position:absolute;
+  width:10px;
+  height:10px;
+  border:1.5px solid #2563eb;
+  background:white;
+  z-index:2;
+}
+.ze-nw {
+  left:-5px;
+  top:-5px;
+  cursor:nwse-resize;
+}
+.ze-ne {
+  right:-5px;
+  top:-5px;
+  cursor:nesw-resize;
+}
+.ze-sw {
+  left:-5px;
+  bottom:-5px;
+  cursor:nesw-resize;
+}
+.ze-se {
+  right:-5px;
+  bottom:-5px;
+  cursor:nwse-resize;
+}
+.ze-field {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin:0 0 12px;
+  min-width:0;
+}
+.ze-field>span {
+  font-size:11px;
+  color:var(--ze-muted);
+}
+.ze-field input,.ze-field textarea,.ze-field select {
+  width:100%;
+  min-width:0;
+  border:1px solid #dce1e8;
+  border-radius:5px;
+  background:white;
+  padding:7px 8px;
+}
+.ze-field input[type=color] {
+  height:34px;
+  padding:3px;
+}
+.ze-field textarea {
+  resize:vertical;
+}
+.ze-pair {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 10px;
+}
+.ze-actions {
+  display:flex;
+  gap:8px;
+  margin:18px 0;
+}
+.ze-dialog .ze-danger {
+  color:#bf3445;
+}
+.ze-dialog hr {
+  border:0;
+  border-top:1px solid var(--ze-line);
+  margin:20px 0;
+}
+.ze-empty {
+  color:var(--ze-muted);
+  padding:8px 12px;
+  font-size:12px;
+  line-height:1.7;
+}
+.ze-notice {
+  background:#fff5d9;
+  padding:10px;
+  border-radius:5px;
+  font-size:11px;
+}
+.ze-upload {
+  display:block;
+  position:relative;
+  text-align:center;
+  padding:10px;
+  border:1px dashed #b7c8e1;
+  border-radius:5px;
+  color:#2563eb;
+  cursor:pointer;
+  margin-bottom:15px;
+}
+.ze-upload input {
+  position:absolute;
+  inset:0;
+  opacity:0;
+  width:100%;
+  cursor:pointer;
+}
+.ze-error {
+  color:#bd263b;
+  font-size:12px;
+}
+.ze-footer {
+  display:flex;
+  justify-content:space-between;
+  padding:8px 16px;
+  border-top:1px solid var(--ze-line);
+  background:white;
+  color:var(--ze-muted);
+  font-size:11px;
+  flex-shrink:0;
+}
+.zero-editor-launch {
+  padding:16px;
+  border:1px solid #94a3b866;
+  border-radius:10px;
+}
+.zero-editor-launch p {
+  font-size:12px;
+  line-height:1.6;
+  margin:0 0 12px;
+  color:#94a3b8;
+}
+.zero-editor-launch button {
+  padding:10px 15px;
+  background:#2563eb;
+  color:white;
+  border:0;
+  border-radius:7px;
+  cursor:pointer;
+}
+.zero-editor-launch details {
+  margin-top:12px;
+  font-size:12px;
+}
+.zero-editor-launch textarea {
+  width:100%;
+  margin-top:8px;
+  background:#111827;
+  color:white;
+  padding:8px;
+}
+@media(max-width:1000px) {
+  .ze-layout {
+    grid-template-columns:175px minmax(0,1fr) 230px;
+  }
+  .ze-muted {
+    display:none;
+  }
+  .ze-toolbar {
+    flex-wrap:wrap;
+  }
+  .ze-toolbar button {
+    padding:6px;
+  }
+  .ze-header {
+    padding:0 12px;
+  }
+  .ze-workspace {
+    padding:20px;
+  }
+}
+@media(max-width:700px) {
+  .ze-layout {
+    grid-template-columns:140px minmax(200px,1fr) 220px;
+    overflow:auto;
+  }
+  .ze-header {
+    flex-wrap:wrap;
+    height:auto;
+    padding:8px;
+    gap:6px;
+  }
+  .ze-header strong {
+    font-size:14px;
+  }
+  .ze-header button {
+    padding:6px;
+  }
+  .ze-footer span:first-child {
+    display:none;
+  }
+  .ze-snap {
+    margin:0 3px;
+  }
+  .ze-toolbar {
+    padding:6px;
+  }
+  .ze-toolbar>div {
+    flex-wrap:wrap;
+  }
+}
