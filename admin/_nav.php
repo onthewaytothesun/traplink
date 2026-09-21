@@ -30,6 +30,12 @@
       <button @click="activeTab='submissions';loadAllSubmissions()"
         :class="activeTab==='submissions'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Заявки</button>
+      <button @click="activeTab='payments';loadPayments()"
+        :class="activeTab==='payments'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
+        class="px-3 py-1.5 rounded-lg text-sm transition-colors">Оплаты</button>
+      <button @click="activeTab='products';loadProducts()"
+        :class="activeTab==='products'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
+        class="px-3 py-1.5 rounded-lg text-sm transition-colors">Товары</button>
     <?php else: ?>
       <a href="/admin/"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors text-gray-500 hover:text-gray-200 hover:bg-gray-800 no-underline">Страницы</a>
@@ -52,11 +58,15 @@
     </a>
     <button @click="openAdd()"
       class="flex items-center gap-1.5 text-white text-sm font-medium px-3.5 py-1.5 rounded-lg transition-colors"
-      style="background:#1f6feb;" onmouseover="this.style.background='#388bfd'" onmouseout="this.style.background='#1f6feb'">
+      style="background:#1f6feb;color:white" onmouseover="this.style.background='#388bfd'" onmouseout="this.style.background='#1f6feb'">
       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
       Добавить
     </button>
     <?php endif; ?>
+    <button onclick="var d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',t);localStorage.setItem('adm-theme',t)"
+      class="text-gray-500 hover:text-white p-1.5 rounded-lg transition-colors" title="Тема">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    </button>
     <a href="/admin/?logout=1" class="text-gray-500 hover:text-white text-sm transition-colors">Выйти →</a>
   </div>
 </header>

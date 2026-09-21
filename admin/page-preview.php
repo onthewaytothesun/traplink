@@ -32,8 +32,12 @@ $stmtBlocks = $pdo->prepare(
 );
 $stmtBlocks->execute([$pageId]);
 $blocks = $stmtBlocks->fetchAll();
-
-$allPages = $pdo->query("SELECT id, title, slug, is_main FROM tap_pages ORDER BY sort_order, id")->fetchAll();
+foreach ($blocks as &$b) {
+    $b['is_visible']    = (bool)$b['is_visible'];
+    $b['block_type_id'] = (int)$b['block_type_id'];
+    $b['sort_order']    = (int)$b['sort_order'];
+}
+unset($b);
 
 $stmtSections = $pdo->prepare(
     "SELECT * FROM tap_sections WHERE page_id=? ORDER BY sort_order, created_at"
@@ -65,12 +69,24 @@ $liveUrl   = $page['is_main'] ? '/' : ($page['slug'] ? '/p/' . $page['slug'] : '
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Редактор — <?= htmlspecialchars($page['title']) ?></title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><path fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' d='M7 10h18M7 14h18M7 18h12M7 22h8'/></svg>">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="/admin/js/sidebar.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <link rel="stylesheet" href="/assets/taplink-frontend.css">
 <style>
 [x-cloak]{display:none!important}
+/* ─── Admin theme: light default, dark via system preference ─── */
+:root{--adm-bg:#f1f5f9;--adm-surface:#ffffff;--adm-raised:#f8fafc;--adm-border:#e2e8f0;--adm-border-s:#d1d5db;--adm-text:#111827;--adm-muted:#6b7280;--adm-subtle:#9ca3af;--adm-scroll:#d1d5db;--adm-nav:rgba(255,255,255,.95);--adm-row-hover:rgba(0,0,0,.04);--adm-overlay-hover:rgba(0,0,0,.04)}
+[data-theme="dark"]{--adm-bg:#030712;--adm-surface:#111827;--adm-raised:#1f2937;--adm-border:#1f2937;--adm-border-s:#374151;--adm-text:#ffffff;--adm-muted:#9ca3af;--adm-subtle:#6b7280;--adm-scroll:#374151;--adm-nav:rgba(17,24,39,.95);--adm-row-hover:rgba(31,41,55,.3);--adm-overlay-hover:rgba(255,255,255,.05)}
+.bg-gray-950{background-color:var(--adm-bg)!important}.bg-gray-900{background-color:var(--adm-surface)!important}.bg-gray-900\/95{background-color:var(--adm-nav)!important}.bg-gray-800{background-color:var(--adm-raised)!important}.bg-gray-700{background-color:var(--adm-border)!important}
+.hover\:bg-gray-800:hover{background-color:var(--adm-raised)!important}.hover\:bg-gray-700:hover{background-color:var(--adm-border)!important}.hover\:bg-white\/5:hover{background-color:var(--adm-overlay-hover)!important}
+.border-gray-800{border-color:var(--adm-border)!important}.border-gray-700{border-color:var(--adm-border-s)!important}.border-gray-600{border-color:var(--adm-border-s)!important}
+.text-white{color:var(--adm-text)!important}.text-gray-200{color:var(--adm-text)!important}.text-gray-300{color:var(--adm-muted)!important}.text-gray-400{color:var(--adm-muted)!important}.text-gray-500{color:var(--adm-subtle)!important}.text-gray-600{color:var(--adm-subtle)!important}
+.hover\:text-white:hover{color:var(--adm-text)!important}.hover\:text-gray-200:hover{color:var(--adm-text)!important}
+.bg-blue-600,.bg-blue-600.text-white{color:#fff!important}
+/* ─────────────────────────────────────────────────────────────── */
 :root {
   --theme-screen-background: <?= htmlspecialchars($bgColor) ?>;
   --theme-text-color:        <?= htmlspecialchars($textColor) ?>;
@@ -122,7 +138,7 @@ body{font-family:<?= $pageFont ? "'" . $pageFont . "'," : '' ?>-apple-system,Bli
   font-size:.875rem;transition:all .15s;
 }
 .admin-add-placeholder:hover{border-color:rgba(255,255,255,.28);color:rgba(255,255,255,.6);background:rgba(255,255,255,.04)}
-.sb::-webkit-scrollbar{width:5px}.sb::-webkit-scrollbar-track{background:transparent}.sb::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+.sb::-webkit-scrollbar{width:5px}.sb::-webkit-scrollbar-track{background:transparent}.sb::-webkit-scrollbar-thumb{background:var(--adm-scroll,#374151);border-radius:3px}
 </style>
 <link rel="stylesheet" href="/assets/blocks.css">
 <?php
@@ -141,6 +157,7 @@ if ($googleFonts) {
     echo "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family={$families}&display=swap\">\n";
 }
 ?>
+<script>!function(){var t=localStorage.getItem('adm-theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)}()</script>
 </head>
 <body style="background:<?= htmlspecialchars($bgColor) ?>;color:<?= htmlspecialchars($textColor) ?>;" x-data="previewApp()" x-cloak>
 
@@ -149,7 +166,7 @@ if ($googleFonts) {
 <!-- ── Layout ── -->
 <div class="flex" style="padding-top:56px;height:100vh">
 
-<?php $sidebarPages = $allPages; $sidebarCurrentId = $pageId; require __DIR__ . '/_sidebar.php'; ?>
+<?php $sidebarCurrentId = $pageId; $sidebarMode = 'navigate'; require __DIR__ . '/_sidebar.php'; ?>
 
 <main class="flex-1 overflow-y-auto sb">
 <!-- ── Page preview ── -->
@@ -416,7 +433,7 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
   <div class="shrink-0 px-4 py-3" style="border-top:1px solid #21262d;background:#161b22">
     <button @click="saveDesign()" :disabled="designSaving"
       class="w-full text-white py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-      style="background:#1f6feb"
+      style="background:#1f6feb;color:white"
       x-text="designSaving?'Сохраняю…':'Сохранить дизайн'"></button>
   </div>
 </div>
@@ -800,7 +817,7 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
       <button @click="blockModal=false" class="text-gray-400 hover:text-white px-4 py-2 text-sm transition-colors">Отмена</button>
       <button @click="saveBlock()" :disabled="saving"
         class="text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-        style="background:#1f6feb"
+        style="background:#1f6feb;color:white"
         x-text="saving?'Сохраняю…':'Сохранить'"></button>
     </div>
   </div>
@@ -821,7 +838,6 @@ function previewApp(){return{
   formError:'',
   form:{block_type_id:1,section_id:'',is_visible:true,anchor:''},
   opts:{},optsJson:'{}',
-  sidebarEdit:{open:false,id:'',title:'',slug:'',saving:false},
   designOpen: false,
   designSaving: false,
   design: {
@@ -902,7 +918,9 @@ function previewApp(){return{
   },
 
   async toggleVis(id){
-    await fetch('/admin/api.php?action=toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    const b=this.blocks.find(x=>x.id===id);
+    const nv=b?!b.is_visible:true;
+    await fetch('/admin/api.php?action=toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,is_visible:nv})});
     sessionStorage.setItem('pv_scroll',window.scrollY);location.reload();
   },
 
@@ -946,26 +964,6 @@ function previewApp(){return{
         body:JSON.stringify(this.design)
       });
     }finally{this.designSaving=false;}
-  },
-
-  openSidebarEdit(id,title,slug){
-    this.sidebarEdit={open:true,id,title,slug,saving:false};
-  },
-  async saveSidebarEdit(){
-    this.sidebarEdit.saving=true;
-    await fetch('/admin/api.php?action=updatePage',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({id:this.sidebarEdit.id,title:this.sidebarEdit.title,slug:this.sidebarEdit.slug})
-    });
-    location.reload();
-  },
-  async sidebarDeletePage(id,title){
-    if(!confirm('Удалить страницу «'+title+'»?')) return;
-    await fetch('/admin/api.php?action=deletePage',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({id})
-    });
-    location.href='/admin/';
   },
 
   init(){
@@ -1014,32 +1012,5 @@ function previewApp(){return{
 };}
 </script>
 
-<!-- Page settings modal -->
-<div x-show="sidebarEdit.open" x-cloak
-  class="fixed inset-0 z-50 flex items-center justify-center"
-  style="background:rgba(0,0,0,.6);"
-  @click.self="sidebarEdit.open=false">
-  <div class="rounded-xl p-5 w-80 space-y-3" style="background:#161b22;border:1px solid #30363d">
-    <div class="text-sm font-semibold" style="color:#e6edf3">Настройки страницы</div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Название</label>
-      <input type="text" x-model="sidebarEdit.title" @keydown.enter="saveSidebarEdit()"
-        class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-    </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Slug (URL)</label>
-      <input type="text" x-model="sidebarEdit.slug" @keydown.enter="saveSidebarEdit()"
-        class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-500"
-        placeholder="my-page">
-    </div>
-    <div class="flex justify-end gap-2 pt-1">
-      <button @click="sidebarEdit.open=false" class="text-gray-400 hover:text-white px-3 py-1.5 text-sm transition-colors">Отмена</button>
-      <button @click="saveSidebarEdit()" :disabled="sidebarEdit.saving"
-        class="text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-        style="background:#1f6feb"
-        x-text="sidebarEdit.saving?'Сохраняю…':'Сохранить'"></button>
-    </div>
-  </div>
-</div>
 </body>
 </html>

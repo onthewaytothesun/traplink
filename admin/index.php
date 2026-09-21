@@ -24,6 +24,12 @@ if (!$isAuth):
 <html lang="ru"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Вход — Блоки</title><script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--adm-bg:#f1f5f9;--adm-surface:#ffffff;--adm-raised:#f8fafc;--adm-border:#e2e8f0;--adm-border-s:#d1d5db;--adm-text:#111827;--adm-muted:#6b7280;--adm-subtle:#9ca3af;--adm-nav:rgba(255,255,255,.95)}
+[data-theme="dark"]{--adm-bg:#030712;--adm-surface:#111827;--adm-raised:#1f2937;--adm-border:#1f2937;--adm-border-s:#374151;--adm-text:#ffffff;--adm-muted:#9ca3af;--adm-subtle:#6b7280;--adm-nav:rgba(17,24,39,.95)}
+.bg-gray-950{background-color:var(--adm-bg)!important}.bg-gray-900{background-color:var(--adm-surface)!important}.bg-gray-800{background-color:var(--adm-raised)!important}.border-gray-800{border-color:var(--adm-border)!important}.border-gray-700{border-color:var(--adm-border-s)!important}.text-white{color:var(--adm-text)!important}.text-gray-400{color:var(--adm-muted)!important}.text-gray-500{color:var(--adm-subtle)!important}.bg-blue-600,.bg-blue-600.text-white{color:#fff!important}
+</style>
+<script>!function(){var t=localStorage.getItem('adm-theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)}()</script>
 </head>
 <body class="bg-gray-950 flex items-center justify-center min-h-screen">
 <div class="w-full max-w-sm">
@@ -64,8 +70,10 @@ if (!$isAuth):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Блоки — Админка</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f6feb'/><path fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' d='M7 10h18M7 14h18M7 18h12M7 22h8'/></svg>">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1/Sortable.min.js"></script>
+<script src="/admin/js/sidebar.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/material-darker.min.css">
@@ -74,13 +82,48 @@ if (!$isAuth):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/javascript/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/css/css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/htmlmixed/htmlmixed.min.js"></script>
+<link rel="stylesheet" href="/assets/taplink-frontend.css">
+<link rel="stylesheet" href="/assets/blocks.css">
 <style>
   [x-cloak]{display:none!important}
-  .sb::-webkit-scrollbar{width:3px}.sb::-webkit-scrollbar-track{background:transparent}.sb::-webkit-scrollbar-thumb{background:#374151;border-radius:2px}
+  /* ─── Admin theme: light default, dark via system preference ─── */
+  :root{--adm-bg:#f1f5f9;--adm-surface:#ffffff;--adm-raised:#f8fafc;--adm-border:#e2e8f0;--adm-border-s:#d1d5db;--adm-text:#111827;--adm-muted:#6b7280;--adm-subtle:#9ca3af;--adm-scroll:#d1d5db;--adm-nav:rgba(255,255,255,.95);--adm-row-hover:rgba(0,0,0,.04);--adm-row-border:rgba(226,232,240,.5);--adm-overlay-hover:rgba(0,0,0,.04)}
+  [data-theme="dark"]{--adm-bg:#030712;--adm-surface:#111827;--adm-raised:#1f2937;--adm-border:#1f2937;--adm-border-s:#374151;--adm-text:#ffffff;--adm-muted:#9ca3af;--adm-subtle:#6b7280;--adm-scroll:#374151;--adm-nav:rgba(17,24,39,.95);--adm-row-hover:rgba(31,41,55,.3);--adm-row-border:rgba(31,41,55,.4);--adm-overlay-hover:rgba(255,255,255,.05)}
+  .bg-gray-950{background-color:var(--adm-bg)!important}.bg-gray-900{background-color:var(--adm-surface)!important}.bg-gray-900\/95{background-color:var(--adm-nav)!important}.bg-gray-800{background-color:var(--adm-raised)!important}.bg-gray-700{background-color:var(--adm-border)!important}
+  .hover\:bg-gray-800:hover{background-color:var(--adm-raised)!important}.hover\:bg-gray-700:hover{background-color:var(--adm-border)!important}.hover\:bg-gray-800\/30:hover{background-color:var(--adm-row-hover)!important}.hover\:bg-white\/5:hover{background-color:var(--adm-overlay-hover)!important}
+  .border-gray-800{border-color:var(--adm-border)!important}.border-gray-700{border-color:var(--adm-border-s)!important}.border-gray-600{border-color:var(--adm-border-s)!important}.border-gray-800\/40{border-color:var(--adm-row-border)!important}
+  .text-white{color:var(--adm-text)!important}.text-gray-200{color:var(--adm-text)!important}.text-gray-300{color:var(--adm-muted)!important}.text-gray-400{color:var(--adm-muted)!important}.text-gray-500{color:var(--adm-subtle)!important}.text-gray-600{color:var(--adm-subtle)!important}
+  .hover\:text-white:hover{color:var(--adm-text)!important}.hover\:text-gray-200:hover{color:var(--adm-text)!important}
+  .placeholder-gray-600::placeholder{color:var(--adm-subtle)!important}
+  .bg-blue-600,.bg-blue-600.text-white{color:#fff!important}
+  /* ─────────────────────────────────────────────────────────────── */
+  .sb::-webkit-scrollbar{width:3px}.sb::-webkit-scrollbar-track{background:transparent}.sb::-webkit-scrollbar-thumb{background:var(--adm-scroll);border-radius:2px}
   .CodeMirror{height:280px;font-size:13px;font-family:'JetBrains Mono','Fira Mono',monospace;border-radius:0.5rem;}
+  /* admin block overlay */
+  .admin-block-wrap{position:relative}
+  .section-group{display:flex;flex-direction:row;margin-bottom:2px}
+  .section-group-label{width:18px;flex-shrink:0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;writing-mode:vertical-lr;transform:rotate(180deg);font-size:.52rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(129,140,248,.85);white-space:nowrap;overflow:hidden;background:rgba(99,102,241,.1);border-left:2px solid rgba(99,102,241,.45)}
+  .section-group-sortable{flex:1;background:rgba(99,102,241,.04);border-left:1px solid rgba(99,102,241,.2);min-height:8px}
+  .admin-block-bar{display:flex;align-items:center;gap:4px;padding:0 6px;background:rgba(13,17,23,.3);border-radius:5px 5px 0 0;height:26px;}
+  .admin-block-content.is-hidden{opacity:.4}
+  .admin-btn{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:4px;color:#1f2937;line-height:1;transition:color .12s}
+  .admin-btn:hover{color:#000}
+  .admin-btn.danger:hover{color:#dc2626}
+  .admin-btn.vis-off{color:#d97706}
+  .drag-handle{cursor:grab;color:#374151;padding:3px 4px;line-height:1}
+  .drag-handle:hover{color:#111827}
+  .drag-handle:active{cursor:grabbing}
+  .admin-add-placeholder{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;margin-top:4px;border:2px dashed rgba(255,255,255,.12);border-radius:10px;color:rgba(255,255,255,.35);background:transparent;cursor:pointer;font-size:.875rem;transition:all .15s;}
+  .admin-add-placeholder:hover{border-color:rgba(255,255,255,.28);color:rgba(255,255,255,.6);background:rgba(255,255,255,.04)}
+  #pagePreviewArea *,#pagePreviewArea *::before,#pagePreviewArea *::after{box-sizing:border-box}
 </style>
+<script>!function(){var t=localStorage.getItem('adm-theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)}()</script>
 </head>
-<body class="bg-gray-950 text-white" x-data="app()" x-init="init()">
+<body class="bg-gray-950 text-white" x-data="app()" x-init="init()"
+  @sidebar-page-selected.window="selectPage($event.detail.page)"
+  @sidebar-page-deleted.window="if(currentPage?.id===$event.detail.pageId){currentPage=null;history.replaceState(null,'','/admin/');}"
+  @sidebar-add-page.window="openAddPage()"
+  @sidebar-add-folder.window="addFolder()">
 
 <!-- Header -->
 <?php $navMode = 'index'; require __DIR__ . '/_nav.php'; ?>
@@ -88,102 +131,15 @@ if (!$isAuth):
 <div class="flex pt-14" style="height:100vh">
 
   <!-- Sidebar: Pages -->
-  <aside x-show="activeTab==='pages'" class="w-56 shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col overflow-hidden">
-    <div class="p-3 border-b border-gray-800 flex items-center justify-between">
-      <span class="text-xs text-gray-500 uppercase tracking-wider font-medium">Страницы</span>
-      <div class="flex items-center gap-1">
-        <button @click="addFolder()" title="Новая папка" class="text-gray-500 hover:text-blue-400 transition-colors p-0.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-        </button>
-        <button @click="openAddPage()" title="Новая страница" class="text-gray-500 hover:text-blue-400 transition-colors p-0.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        </button>
-      </div>
-    </div>
-    <nav class="flex-1 overflow-y-auto sb p-2 space-y-0.5">
-
-      <!-- ── Folders ── -->
-      <template x-for="folder in folders" :key="folder.id">
-        <div>
-          <!-- Folder row -->
-          <div class="group/folder relative flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer select-none"
-               @click="folder._open = !folder._open">
-            <svg class="w-3 h-3 text-gray-500 shrink-0 transition-transform" :class="folder._open ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-            <span class="text-xs text-gray-300 font-medium truncate flex-1" x-text="folder.title"></span>
-            <span class="text-xs text-gray-600 shrink-0" x-text="pagesInFolder(folder.id).length"></span>
-            <!-- folder actions -->
-            <div class="absolute right-1 top-1 flex gap-0.5 opacity-0 group-hover/folder:opacity-100 transition-opacity" @click.stop>
-              <button @click="renameFolder(folder)" title="Переименовать" class="p-1 rounded text-gray-600 hover:text-gray-300 hover:bg-gray-700 transition-colors">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-              </button>
-              <button @click="deleteFolder(folder)" title="Удалить папку" class="p-1 rounded text-gray-600 hover:text-red-400 hover:bg-gray-700 transition-colors">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
-            </div>
-          </div>
-          <!-- Pages in folder -->
-          <div x-show="folder._open" class="ml-3 mt-0.5 space-y-0.5 border-l border-gray-800 pl-2">
-            <template x-for="pg in pagesInFolder(folder.id)" :key="pg.id">
-              <div class="group relative">
-                <button @click="selectPage(pg)"
-                  :class="currentPage?.id === pg.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
-                  class="w-full text-left px-2 py-1.5 rounded-lg text-sm transition-colors pr-12">
-                  <div class="flex items-center gap-1 min-w-0">
-                    <span x-show="pg.is_main" class="shrink-0 text-xs text-yellow-400">★</span>
-                    <span class="truncate" x-text="pg.title"></span>
-                  </div>
-                </button>
-                <div class="absolute right-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button @click.stop="openEditPage(pg)" :class="currentPage?.id===pg.id?'text-white/60 hover:text-white':'text-gray-600 hover:text-gray-300'" class="p-1 rounded hover:bg-gray-700 transition-colors">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
-                  </button>
-                  <button @click.stop="deletePage(pg)" :class="currentPage?.id===pg.id?'text-white/60 hover:text-red-300':'text-gray-600 hover:text-red-400'" class="p-1 rounded hover:bg-gray-700 transition-colors">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                  </button>
-                </div>
-              </div>
-            </template>
-            <div x-show="pagesInFolder(folder.id).length===0" class="text-xs text-gray-600 px-2 py-1">пусто</div>
-          </div>
-        </div>
-      </template>
-
-      <!-- ── Ungrouped pages ── -->
-      <template x-for="pg in pagesWithoutFolder" :key="pg.id">
-        <div class="group relative">
-          <button @click="selectPage(pg)"
-            :class="currentPage?.id === pg.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
-            class="w-full text-left px-2.5 py-2 rounded-lg text-sm transition-colors pr-14">
-            <div class="flex items-center gap-1.5 min-w-0">
-              <span x-show="pg.is_main" class="shrink-0 text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-1 py-0 rounded leading-4">★</span>
-              <span class="truncate font-medium" x-text="pg.title"></span>
-            </div>
-            <div class="text-xs opacity-50 mt-0.5 font-mono truncate" x-text="pg.slug ? '/p/'+pg.slug : '—'"></div>
-          </button>
-          <div class="absolute right-1.5 top-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button @click.stop="openEditPage(pg)" :class="currentPage?.id===pg.id?'text-white/60 hover:text-white':'text-gray-600 hover:text-gray-300'" class="p-1 rounded hover:bg-gray-700 transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
-            </button>
-            <button @click.stop="deletePage(pg)" :class="currentPage?.id===pg.id?'text-white/60 hover:text-red-300':'text-gray-600 hover:text-red-400'" class="p-1 rounded hover:bg-gray-700 transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
-          </div>
-        </div>
-      </template>
-
-      <div x-show="pages.length === 0 && !loading" class="text-center py-6 text-gray-600 text-xs">
-        Страниц нет.<br>
-        <button @click="openAddPage()" class="text-blue-400 hover:underline mt-1">Создать первую</button>
-      </div>
-    </nav>
-  </aside>
+  <div x-show="activeTab==='pages'">
+    <?php $sidebarCurrentId = ''; $sidebarMode = 'select'; require __DIR__ . '/_sidebar.php'; ?>
+  </div>
 
   <!-- Main -->
   <main x-show="activeTab==='pages'" class="flex-1 flex flex-col overflow-hidden">
 
     <!-- No page selected -->
-    <div x-show="!currentPage && !loading" class="flex-1 flex items-center justify-center text-gray-600">
+    <div x-show="!currentPage" class="flex-1 flex items-center justify-center text-gray-600">
       <div class="text-center">
         <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -193,146 +149,30 @@ if (!$isAuth):
       </div>
     </div>
 
-    <!-- Loading -->
-    <div x-show="loading" class="flex-1 flex items-center justify-center text-gray-600">
-      <svg class="animate-spin w-6 h-6" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-      </svg>
+    <!-- Visual editor -->
+    <div x-show="currentPage" class="flex-1 overflow-y-auto sb flex justify-center" style="background:#e5e7eb">
+      <div class="relative w-full max-w-2xl px-4 py-6">
+        <!-- View button -->
+        <div class="flex justify-end mb-2">
+          <a :href="currentPage?.is_main ? '/' : (currentPage?.slug ? '/p/'+currentPage.slug : '#')"
+            target="_blank"
+            class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 bg-white hover:bg-gray-50 border border-gray-300 px-3 py-1.5 rounded-lg transition-colors no-underline shadow-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            Просмотр
+          </a>
+        </div>
+        <!-- Spinner -->
+        <div x-show="previewLoading" class="absolute inset-0 z-10 flex items-center justify-center" style="background:rgba(229,231,235,.7)">
+          <svg class="animate-spin w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
+        <!-- Rendered page -->
+        <div id="pagePreviewArea" style="border-radius:12px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.12)"></div>
+      </div>
     </div>
 
-    <!-- Page content -->
-    <template x-if="currentPage && !loading">
-      <div class="flex flex-col flex-1 overflow-hidden">
-
-        <!-- Sections bar -->
-        <div class="border-b border-gray-800 bg-gray-900/50 px-5 py-2 flex items-center gap-2 flex-wrap">
-          <button @click="currentSection = null"
-            :class="currentSection === null ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'"
-            class="text-xs px-3 py-1.5 rounded-full transition-colors">
-            Все <span class="opacity-60" x-text="pageBlocks.length"></span>
-          </button>
-          <template x-for="sec in pageSections" :key="sec.id">
-            <div class="flex items-center gap-1 group/sec">
-              <button @click="currentSection = sec.id"
-                :class="currentSection === sec.id ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'"
-                class="text-xs px-3 py-1.5 rounded-full transition-colors"
-                x-text="sec.title + ' (' + blocksInSection(sec.id) + ')'"></button>
-              <button @click="deleteSection(sec.id)"
-                class="opacity-0 group-hover/sec:opacity-100 text-gray-600 hover:text-red-400 transition-all">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-          </template>
-          <button @click="openAddSection()"
-            class="text-xs text-gray-600 hover:text-blue-400 px-2 py-1.5 transition-colors flex items-center gap-1">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Секция
-          </button>
-        </div>
-
-        <!-- Toolbar -->
-        <div class="px-5 py-3 flex items-center justify-between shrink-0">
-          <span class="text-sm text-gray-400"
-            x-text="currentSection ? pageSections.find(s=>s.id===currentSection)?.title : currentPage.title"></span>
-          <button @click="openAdd()"
-            class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-lg text-sm font-medium transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Добавить блок
-          </button>
-        </div>
-
-        <!-- Blocks -->
-        <div class="flex-1 overflow-y-auto sb px-5 pb-5">
-          <div x-show="visibleBlocks.length === 0" class="text-center py-16 text-gray-600">
-            <svg class="w-9 h-9 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-            </svg>
-            Блоков нет. <button @click="openAdd()" class="text-blue-400 hover:underline">Добавить</button>
-          </div>
-
-          <div x-show="visibleBlocks.length > 0" class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wider">
-                  <th class="w-8 px-2 py-3"></th>
-                  <th class="text-left px-4 py-3 w-8">#</th>
-                  <th class="text-left px-4 py-3">Тип</th>
-                  <th class="text-left px-4 py-3">Содержимое</th>
-                  <th class="text-left px-4 py-3 hidden md:table-cell">Секция</th>
-                  <th class="text-left px-4 py-3">Видимость</th>
-                  <th class="px-4 py-3 w-20"></th>
-                </tr>
-              </thead>
-              <tbody id="blocksTbody">
-                <template x-for="(b, i) in visibleBlocks" :key="b.id">
-                  <tr class="border-b border-gray-800/40 hover:bg-gray-800/30 transition-colors" :data-block-id="b.id">
-                    <td class="px-2 py-3">
-                      <div class="drag-handle cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 select-none flex items-center justify-center w-6 mx-auto">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 text-gray-600" x-text="i + 1"></td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-md bg-gray-800 flex items-center justify-center shrink-0 text-gray-200">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"
-                            x-html="getIcon(b.block_type_name)"></svg>
-                        </div>
-                        <div>
-                          <div class="text-gray-200 text-xs font-medium" x-text="getLabel(b.block_type_id)"></div>
-                          <div class="text-gray-600 text-xs font-mono" x-text="b.block_type_name"></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 text-gray-400 max-w-xs">
-                      <span class="block truncate" x-text="preview(b)"></span>
-                    </td>
-                    <td class="px-4 py-3 text-gray-500 hidden md:table-cell"
-                      x-text="b.section_id ? (pageSections.find(s=>s.id===b.section_id)?.title || '—') : '—'"></td>
-                    <td class="px-4 py-3">
-                      <button @click="toggleVis(b)"
-                        :class="b.is_visible ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-gray-800 text-gray-600 border-gray-700'"
-                        class="text-xs border px-2 py-0.5 rounded-full transition-colors"
-                        x-text="b.is_visible ? 'Виден' : 'Скрыт'"></button>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center justify-end gap-0.5">
-                        <template x-if="b.block_type_name==='form'">
-                          <button @click="openSubmissions(b)" class="text-gray-500 hover:text-blue-400 p-1.5 rounded hover:bg-gray-700 transition-colors" title="Заявки">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                          </button>
-                        </template>
-                        <button @click="openEdit(b)" class="text-gray-500 hover:text-white p-1.5 rounded hover:bg-gray-700 transition-colors">
-                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                          </svg>
-                        </button>
-                        <button @click="removeBlock(b)" class="text-gray-600 hover:text-red-400 p-1.5 rounded hover:bg-gray-700 transition-colors">
-                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-    </template>
   </main>
 
   <!-- Design tab -->
@@ -562,9 +402,358 @@ if (!$isAuth):
         <div id="headCodeEditor" class="rounded-lg overflow-hidden border border-gray-700"></div>
       </div>
 
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-3">
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Фавиконка</div>
+        <div class="flex items-center gap-4">
+          <div x-show="siteSettings.favicon_url" class="shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-gray-700 flex items-center justify-center bg-gray-800">
+            <img :src="siteSettings.favicon_url" class="w-8 h-8 object-contain">
+          </div>
+          <div class="flex-1">
+            <label class="flex items-center justify-center gap-2 w-full cursor-pointer bg-gray-800 border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg px-3 py-2.5 text-sm transition-colors"
+              :class="faviconUploading && 'opacity-60 pointer-events-none'"
+              @click.prevent="!faviconUploading && $refs.faviconFile.click()">
+              <template x-if="faviconUploading">
+                <svg class="animate-spin" width="14" height="14" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg>
+              </template>
+              <template x-if="!faviconUploading">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              </template>
+              <span x-text="faviconUploading ? 'Загружаю…' : (siteSettings.favicon_url ? 'Заменить' : 'Загрузить фавиконку')"></span>
+            </label>
+            <input type="file" x-ref="faviconFile" class="hidden" accept="image/*,.ico"
+              @change="async function(e){
+                const f=e.target.files[0]; if(!f) return;
+                faviconUploading=true;
+                try {
+                  const fd=new FormData(); fd.append('file',f);
+                  const r=await fetch('/admin/upload.php',{method:'POST',body:fd});
+                  const d=await r.json();
+                  if(d.url) siteSettings.favicon_url=d.url;
+                  else alert(d.error||'Ошибка загрузки');
+                } catch(ex){ alert('Ошибка загрузки'); }
+                faviconUploading=false;
+                e.target.value='';
+              }($event)">
+          </div>
+          <button x-show="siteSettings.favicon_url" @click="siteSettings.favicon_url=''"
+            class="shrink-0 text-gray-600 hover:text-red-400 transition-colors text-lg leading-none">×</button>
+        </div>
+        <p class="text-xs text-gray-600">PNG, ICO или SVG. Рекомендуется 32×32 или 64×64 px.</p>
+      </div>
+
       <button @click="saveSiteSettings()" :disabled="siteSettingsSaving"
         class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
         x-text="siteSettingsSaving?'Сохраняю…':'Сохранить настройки'"></button>
+    </div>
+  </div>
+
+  <!-- Payments tab -->
+  <div x-show="activeTab==='payments'" x-cloak class="flex-1 overflow-y-auto sb p-8 flex justify-center">
+    <div class="w-full max-w-lg space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-white">Платёжные системы</h2>
+        <button x-show="payments.length===0" @click="openAddPayment('getplatinum')"
+          class="flex items-center gap-1.5 text-sm bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-1.5 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Подключить
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div x-show="paymentsLoading" class="flex justify-center py-12">
+        <svg class="animate-spin w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+
+      <!-- Available providers grid -->
+      <div x-show="!paymentsLoading">
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Доступные системы</div>
+        <div class="grid grid-cols-2 gap-2">
+          <template x-for="[key, p] in Object.entries(PAYMENT_PROVIDERS)" :key="key">
+            <button @click="openAddPayment(key)"
+              :class="payments.some(pm=>pm.provider===key) ? 'border-purple-600/50 bg-purple-900/10' : 'border-gray-800 hover:border-gray-600'"
+              class="flex items-center gap-3 p-3 bg-gray-900 border rounded-xl transition-colors text-left relative">
+              <span class="text-xl w-8 shrink-0 text-center" x-text="p.icon"></span>
+              <div class="min-w-0">
+                <div class="text-sm text-white font-medium truncate" x-text="p.name"></div>
+                <div class="text-xs text-gray-500 truncate" x-text="p.desc"></div>
+              </div>
+              <div x-show="payments.some(pm=>pm.provider===key && pm.is_active)" class="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full"></div>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Connected -->
+      <template x-for="pm in payments" :key="pm.id">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-lg"
+              style="background:#7c3aed22;color:#7c3aed">💎</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-sm text-white" x-text="pm.label || 'GetPlatinum'"></div>
+              <div class="text-xs text-gray-500 mt-0.5">Приём платежей</div>
+            </div>
+            <div :class="pm.is_active ? 'bg-green-900/50 text-green-400 border-green-800' : 'bg-gray-800 text-gray-500 border-gray-700'"
+              class="text-xs px-2 py-0.5 rounded-full border shrink-0"
+              x-text="pm.is_active ? 'Активна' : 'Отключена'"></div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button @click="editPayment(pm)"
+              class="flex-1 text-sm text-gray-400 hover:text-white hover:bg-gray-800 px-3 py-2 rounded-lg transition-colors text-center">Настройки</button>
+            <button @click="togglePayment(pm)"
+              class="flex-1 text-sm px-3 py-2 rounded-lg transition-colors text-center"
+              :class="pm.is_active ? 'text-yellow-400 hover:bg-yellow-900/30' : 'text-green-400 hover:bg-green-900/30'"
+              x-text="pm.is_active ? 'Отключить' : 'Включить'"></button>
+            <button @click="deletePayment(pm)"
+              class="text-sm text-red-400 hover:bg-red-900/30 px-3 py-2 rounded-lg transition-colors">Удалить</button>
+          </div>
+          <div class="text-xs text-gray-600 border-t border-gray-800 pt-3">
+            <span class="text-gray-500">Callback URL:</span>
+            <code class="ml-1 text-gray-400 select-all"><?= htmlspecialchars((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '')) ?>/payment-callback.php</code>
+          </div>
+        </div>
+      </template>
+
+      <!-- Orders list -->
+      <div x-show="!paymentsLoading && payments.length>0">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Последние заказы</div>
+          <button @click="loadOrders()" class="text-xs text-gray-500 hover:text-white transition-colors">Обновить</button>
+        </div>
+        <div x-show="ordersLoading" class="flex justify-center py-6">
+          <svg class="animate-spin w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
+        <div x-show="!ordersLoading && orders.length===0" class="text-center py-6 text-gray-600 text-sm">Заказов пока нет</div>
+        <div x-show="!ordersLoading && orders.length>0" class="space-y-2">
+          <template x-for="o in orders" :key="o.id">
+            <div class="bg-gray-900 border border-gray-800 rounded-lg p-3 flex items-center gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm text-white truncate" x-text="o.deal_id"></div>
+                <div class="text-xs text-gray-500 mt-0.5" x-text="(o.amount/100).toFixed(2)+' '+o.currency+' — '+o.created_at"></div>
+              </div>
+              <div class="text-xs px-2 py-0.5 rounded-full border shrink-0"
+                :class="o.status==='paid' ? 'bg-green-900/50 text-green-400 border-green-800' : o.status==='failed' ? 'bg-red-900/50 text-red-400 border-red-800' : 'bg-gray-800 text-gray-500 border-gray-700'"
+                x-text="o.status==='paid'?'Оплачен':o.status==='failed'?'Ошибка':'Ожидание'"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products tab -->
+  <div x-show="activeTab==='products'" x-cloak class="flex-1 overflow-y-auto sb p-8 flex justify-center">
+    <div class="w-full max-w-2xl space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-white">Цифровые товары</h2>
+        <button @click="openProductModal()"
+          class="flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Добавить товар
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div x-show="productsLoading" class="flex justify-center py-12">
+        <svg class="animate-spin w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+
+      <!-- Empty -->
+      <div x-show="!productsLoading && products.length===0" class="text-center py-12 text-gray-600 text-sm">
+        Товаров пока нет
+      </div>
+
+      <!-- Product cards -->
+      <div x-show="!productsLoading" class="grid gap-4">
+        <template x-for="prod in products" :key="prod.id">
+          <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden flex">
+            <!-- Image -->
+            <div class="w-28 h-28 shrink-0 bg-gray-800 flex items-center justify-center">
+              <template x-if="prod.image_url">
+                <img :src="prod.image_url" class="w-full h-full object-cover" alt="">
+              </template>
+              <template x-if="!prod.image_url">
+                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </template>
+            </div>
+            <!-- Info -->
+            <div class="flex-1 p-4 flex flex-col justify-between min-w-0">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-sm text-white truncate" x-text="prod.title"></span>
+                  <span x-show="!prod.is_active" class="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-500 border border-gray-700 shrink-0">Скрыт</span>
+                </div>
+                <div class="text-sm text-blue-400 mt-1 font-mono" x-text="(prod.price/100).toFixed(2)+' '+prod.currency"></div>
+                <div x-show="prod.success_page_id" class="text-xs text-gray-500 mt-1">
+                  Страница после оплаты: <span class="text-gray-400" x-text="productPageTitle(prod.success_page_id)"></span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 mt-2">
+                <button @click="editProduct(prod)" class="text-xs text-gray-400 hover:text-white hover:bg-gray-800 px-2.5 py-1.5 rounded-lg transition-colors">Редактировать</button>
+                <button @click="deleteProduct(prod)" class="text-xs text-red-400 hover:bg-red-900/30 px-2.5 py-1.5 rounded-lg transition-colors">Удалить</button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Product modal ══ -->
+<div x-show="productModal" x-cloak @click.self="productModal=false"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.7)">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md flex flex-col shadow-2xl" style="max-height:90vh">
+    <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between shrink-0">
+      <h3 class="font-semibold text-white" x-text="productForm.id ? 'Редактировать товар' : 'Новый товар'"></h3>
+      <button @click="productModal=false" class="text-gray-500 hover:text-white p-1 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto sb p-5 space-y-4">
+      <!-- Image upload -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1.5">Изображение</label>
+        <div class="flex items-center gap-3">
+          <div class="w-20 h-20 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+            <template x-if="productForm.image_url">
+              <img :src="productForm.image_url" class="w-full h-full object-cover" alt="">
+            </template>
+            <template x-if="!productForm.image_url">
+              <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </template>
+          </div>
+          <div class="flex-1">
+            <label class="inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 cursor-pointer transition-colors">
+              <span x-text="productImageUploading ? 'Загрузка…' : 'Загрузить'"></span>
+              <input type="file" accept="image/*" class="hidden" @change="uploadProductImage($event)" :disabled="productImageUploading">
+            </label>
+            <button x-show="productForm.image_url" @click="productForm.image_url=''"
+              class="block text-xs text-red-400 hover:text-red-300 mt-1 transition-colors">Удалить</button>
+          </div>
+        </div>
+      </div>
+      <!-- Title -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1.5">Название</label>
+        <input type="text" x-model="productForm.title" placeholder="Курс, шаблон, файл…"
+          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <!-- Price -->
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label class="block text-xs text-gray-500 mb-1.5">Цена (руб.)</label>
+          <input type="number" step="0.01" min="0" x-model.number="productForm.priceRub" placeholder="0.00"
+            class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 font-mono">
+        </div>
+      </div>
+      <!-- Success page -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1.5">Страница после оплаты (необязательно)</label>
+        <select x-model="productForm.success_page_id"
+          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+          <option value="">— Не выбрана —</option>
+          <template x-for="pg in productPages" :key="pg.id">
+            <option :value="pg.id" x-text="pg.title"></option>
+          </template>
+        </select>
+        <p class="text-xs text-gray-600 mt-1">Покупатель будет перенаправлен на эту страницу после успешной оплаты</p>
+      </div>
+      <!-- Active -->
+      <div class="flex items-center gap-2">
+        <input type="checkbox" x-model="productForm.is_active" id="prodActive"
+          class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0">
+        <label for="prodActive" class="text-sm text-gray-400">Активен</label>
+      </div>
+      <!-- Error -->
+      <div x-show="productError" class="text-sm text-red-400" x-text="productError"></div>
+    </div>
+    <div class="px-5 py-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+      <button @click="productModal=false" class="text-gray-400 hover:text-white px-3 py-1.5 text-sm transition-colors">Отмена</button>
+      <button @click="saveProduct()" :disabled="productSaving"
+        class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+        x-text="productSaving ? 'Сохраняю…' : 'Сохранить'"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Payment modal (GetPlatinum) ══ -->
+<div x-show="paymentModal" x-cloak @click.self="paymentModal=false"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.7)">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md flex flex-col shadow-2xl" style="max-height:90vh">
+    <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between shrink-0">
+      <div>
+        <h3 class="font-semibold text-white" x-text="paymentForm.id ? 'Настройки GetPlatinum' : 'Подключить GetPlatinum'"></h3>
+      </div>
+      <button @click="paymentModal=false" class="text-gray-500 hover:text-white p-1 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="overflow-y-auto sb p-5 space-y-4">
+      <!-- Label -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1.5">Название (необязательно)</label>
+        <input type="text" x-model="paymentForm.label" placeholder="Например: Основная касса"
+          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+
+      <!-- Credential fields -->
+      <div class="space-y-3">
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Реквизиты</div>
+        <template x-for="field in (PAYMENT_PROVIDERS['getplatinum']?.fields||[])" :key="field.key">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1.5" x-text="field.label"></label>
+            <template x-if="field.options">
+              <select
+                :value="paymentForm.credentials[field.key]||''"
+                @change="paymentForm.credentials[field.key]=$event.target.value"
+                class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <option value="" disabled>Выберите…</option>
+                <template x-for="o in field.options" :key="o.v">
+                  <option :value="o.v" x-text="o.t" :selected="paymentForm.credentials[field.key]==o.v"></option>
+                </template>
+              </select>
+            </template>
+            <template x-if="!field.options">
+              <input :type="field.secret ? 'password' : 'text'"
+                :placeholder="field.placeholder||''"
+                :value="paymentForm.credentials[field.key]||''"
+                @input="paymentForm.credentials[field.key]=$event.target.value"
+                class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 font-mono">
+            </template>
+            <p x-show="field.hint" class="text-xs text-gray-600 mt-1" x-text="field.hint"></p>
+          </div>
+        </template>
+      </div>
+
+      <!-- Active toggle -->
+      <label class="flex items-center gap-3 cursor-pointer">
+        <div class="relative">
+          <input type="checkbox" x-model="paymentForm.is_active" class="sr-only peer">
+          <div class="w-10 h-6 bg-gray-700 peer-checked:bg-purple-600 rounded-full transition-colors"></div>
+          <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
+        </div>
+        <span class="text-sm text-gray-300">Активна</span>
+      </label>
+
+      <p x-show="paymentError" class="text-red-400 text-sm" x-text="paymentError"></p>
+    </div>
+
+    <div class="px-5 py-4 border-t border-gray-800 flex justify-end gap-3 shrink-0">
+      <button @click="paymentModal=false" class="text-gray-400 hover:text-white px-4 py-2 text-sm transition-colors">Отмена</button>
+      <button @click="savePayment()" :disabled="paymentSaving"
+        class="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+        x-text="paymentSaving ? 'Сохраняю…' : 'Сохранить'"></button>
     </div>
   </div>
 </div>
@@ -681,7 +870,13 @@ if (!$isAuth):
 
       <!-- Section -->
       <div>
-        <label class="block text-sm text-gray-400 mb-1.5">Секция</label>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-sm text-gray-400">Секция</label>
+          <button @click="openAddSection()" class="text-xs text-gray-600 hover:text-blue-400 flex items-center gap-1 transition-colors">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Новая секция
+          </button>
+        </div>
         <select x-model="form.section_id"
           class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 text-sm">
           <option value="">Без секции</option>
@@ -1015,8 +1210,218 @@ if (!$isAuth):
         </div>
       </template>
 
+      <!-- Pictures block -->
+      <template x-if="typeName(form.block_type_id) === 'pictures'">
+        <div class="space-y-3">
+          <label class="block text-xs text-gray-500 mb-1">Фотографии карусели</label>
+          <div class="grid grid-cols-3 gap-2">
+            <template x-for="(item, i) in (opts.list || [])" :key="i">
+              <div class="relative group" style="aspect-ratio:1/1">
+                <img :src="item.p?.filename?.startsWith('/') ? item.p.filename : 'https://p.taplink.st/p/'+item.p?.filename"
+                  class="w-full h-full object-cover rounded-lg bg-gray-800">
+                <button type="button" @click="opts.list.splice(i,1)"
+                  class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+              </div>
+            </template>
+            <label class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-700 cursor-pointer hover:border-blue-500 transition-colors text-gray-600 hover:text-blue-400" style="aspect-ratio:1/1">
+              <template x-if="!picturesUploading">
+                <span>
+                  <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                  <span class="text-xs">Фото</span>
+                </span>
+              </template>
+              <template x-if="picturesUploading">
+                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              </template>
+              <input type="file" accept="image/*" multiple class="hidden" @change="uploadPicturesImages($event)">
+            </label>
+          </div>
+          <!-- Dots settings -->
+          <div class="border-t border-gray-700 pt-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-400">Точки навигации</span>
+              <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                <input type="checkbox" :checked="opts.dots?.show ?? true"
+                  @change="if(!opts.dots)opts.dots={show:true,shape:'circle'};opts.dots.show=$event.target.checked"
+                  class="accent-blue-500 cursor-pointer">
+                <span class="text-xs text-gray-400">Показывать</span>
+              </label>
+            </div>
+            <template x-if="opts.dots?.show ?? true">
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500 w-12 shrink-0">Цвет</span>
+                  <input type="color" :value="opts.dots?.color || '#333333'"
+                    @input="if(!opts.dots)opts.dots={show:true,shape:'circle'};opts.dots.color=$event.target.value"
+                    class="w-8 h-7 rounded cursor-pointer border-0 bg-transparent p-0">
+                  <button type="button" @click="if(opts.dots)delete opts.dots.color"
+                    class="text-xs text-gray-500 hover:text-gray-300">авто</button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500 w-12 shrink-0">Форма</span>
+                  <div class="flex gap-1">
+                    <template x-for="sh in [{v:'circle',l:'●'},{v:'square',l:'■'},{v:'line',l:'▬'}]" :key="sh.v">
+                      <button type="button"
+                        @click="if(!opts.dots)opts.dots={show:true};opts.dots.shape=sh.v"
+                        :class="(opts.dots?.shape||'circle')===sh.v ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'"
+                        class="px-2 py-0.5 text-sm rounded leading-none" x-text="sh.l"></button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- Form editor -->
+      <template x-if="typeName(form.block_type_id) === 'form'">
+        <div class="space-y-3">
+          <div>
+            <label class="text-sm text-gray-400 mb-2 block">Поля формы</label>
+            <div class="flex flex-wrap gap-1">
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:3,title:'Имя',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Текст</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:5,title:'Телефон',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Телефон</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:6,title:'Email',text:'',required:true,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Email</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:12,title:'Количество',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Число</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:9,title:'Дата',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Дата</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:13,title:'Время',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Время</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:7,title:'Выбор',text:'',required:false,idx:(opts.fields||[]).length+1,options:['Вариант 1','Вариант 2']}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Выбор</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:10,title:'Список',text:'',required:false,idx:(opts.fields||[]).length+1,options:['Пункт 1','Пункт 2']}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Список</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:11,title:'Согласие',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Галочка</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:8,title:'Страна',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Страна</button>
+            </div>
+          </div>
+          <template x-for="(field, fi) in (opts.fields||[])" :key="fi">
+            <div class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 space-y-2">
+              <div class="flex gap-2 items-center">
+                <span class="text-xs text-gray-500 w-14 shrink-0" x-text="({3:'Текст',5:'Тел.',6:'Email',7:'Выбор',8:'Страна',9:'Дата',10:'Список',11:'Галочка',12:'Число',13:'Время'})[field.type_id]||'Текст'"></span>
+                <input type="text" x-model="field.title" placeholder="Подпись"
+                  class="flex-1 bg-transparent text-white text-sm focus:outline-none min-w-0">
+                <label class="flex items-center gap-1 text-xs text-gray-500 shrink-0 cursor-pointer">
+                  <input type="checkbox" x-model="field.required" class="accent-blue-500">
+                  обяз.
+                </label>
+                <button type="button" @click="opts.fields.splice(fi,1)"
+                  class="text-gray-600 hover:text-red-400 text-lg leading-none shrink-0">×</button>
+              </div>
+              <!-- Options editor for radio / select -->
+              <template x-if="field.type_id==7 || field.type_id==10">
+                <div class="space-y-1 pl-14">
+                  <template x-for="(opt, oi) in (field.options||[])" :key="oi">
+                    <div class="flex gap-1 items-center">
+                      <span class="text-gray-600 text-xs w-4 shrink-0" x-text="field.type_id==7?'○':'•'"></span>
+                      <input type="text" :value="opt" @input="field.options[oi]=$event.target.value"
+                        class="flex-1 bg-gray-900 border border-gray-700 text-white text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500 min-w-0">
+                      <button type="button" @click="field.options.splice(oi,1)"
+                        class="text-gray-600 hover:text-red-400 text-sm leading-none shrink-0">×</button>
+                    </div>
+                  </template>
+                  <button type="button" @click="if(!field.options)field.options=[];field.options.push('Вариант '+(field.options.length+1))"
+                    class="text-xs text-blue-400 hover:text-blue-300">+ вариант</button>
+                </div>
+              </template>
+            </div>
+          </template>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Текст кнопки</label>
+            <input type="text" x-model="opts.form_btn" placeholder="Отправить"
+              class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+          </div>
+          <!-- Product -->
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Товар (оплата при отправке)</label>
+            <select x-model="opts.product_id"
+              @focus="if(!formProducts.length)loadFormProducts()"
+              class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              <option value="">— Без оплаты —</option>
+              <template x-for="pr in formProducts" :key="pr.id">
+                <option :value="pr.id" x-text="pr.title + ' — ' + (pr.price/100).toFixed(2) + ' ' + pr.currency"></option>
+              </template>
+            </select>
+            <p class="text-xs text-gray-600 mt-1">При заполнении формы создастся заказ и покупатель перейдёт к оплате</p>
+          </div>
+        </div>
+      </template>
+
+      <!-- Media editor -->
+      <template x-if="typeName(form.block_type_id) === 'media'">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-sm text-gray-400">Элементы</label>
+            <button type="button" @click="opts.fields = [...(opts.fields||[]), {title:'',text:'',thumb:{t:'none'}}]"
+              class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Добавить</button>
+          </div>
+          <template x-for="(field, fi) in (opts.fields||[])" :key="fi">
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <!-- Icon picker -->
+                <div x-data="{open:false}" class="relative shrink-0">
+                  <button type="button" @click="open=!open"
+                    class="w-9 h-9 rounded-lg bg-gray-700 border border-gray-600 flex items-center justify-center hover:bg-gray-600">
+                    <template x-if="(field.thumb||{}).t==='p' && (field.thumb.p||{}).filename">
+                      <img :src="field.thumb.p.filename" class="w-6 h-6 object-contain">
+                    </template>
+                    <template x-if="(field.thumb||{}).t==='i' && field.thumb.i">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-200">
+                        <path :d="MEDIA_ICONS[field.thumb.i]||''"/>
+                      </svg>
+                    </template>
+                    <template x-if="!(field.thumb||{}).t || (field.thumb||{}).t==='none' || ((field.thumb||{}).t==='i' && !field.thumb.i) || ((field.thumb||{}).t==='p' && !(field.thumb.p||{}).filename)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-600">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                      </svg>
+                    </template>
+                  </button>
+                  <div x-show="open" @click.outside="open=false"
+                    class="absolute left-0 top-10 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-3 w-64">
+                    <div class="text-xs text-gray-500 mb-2">Иконка</div>
+                    <div class="grid grid-cols-6 gap-1 mb-3">
+                      <button type="button" @click="field.thumb={t:'none'};open=false"
+                        class="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-500 hover:bg-gray-700 text-xs">✕</button>
+                      <template x-for="ico in MEDIA_ICONS_LIST" :key="ico.id">
+                        <button type="button" @click="field.thumb={t:'i',i:ico.id};open=false"
+                          :class="(field.thumb||{}).t==='i' && field.thumb.i===ico.id ? 'bg-blue-600 border-blue-500' : 'bg-gray-800 border-gray-700 hover:bg-gray-700'"
+                          class="w-8 h-8 rounded-lg border flex items-center justify-center" :title="ico.label">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-gray-200">
+                            <path :d="ico.path"/>
+                          </svg>
+                        </button>
+                      </template>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-1">Своя картинка (URL)</div>
+                    <input type="text" placeholder="/uploads/icons/my.svg"
+                      :value="(field.thumb||{}).t==='p' ? ((field.thumb.p||{}).filename||'') : ''"
+                      @input="field.thumb={t:'p',p:{filename:$event.target.value}}"
+                      class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-blue-500">
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0 space-y-1">
+                  <input type="text" x-model="field.title" placeholder="Заголовок"
+                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                  <input type="text" x-model="field.text" placeholder="Подпись"
+                    class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="button" @click="opts.fields.splice(fi,1)"
+                  class="text-gray-600 hover:text-red-400 text-xl leading-none shrink-0">×</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
       <!-- JSON fallback for complex types -->
-      <template x-if="['messenger','socialnetworks','collapse','media','pricing','music','plans','form','pictures','avatar','digitals-product'].includes(typeName(form.block_type_id))">
+      <template x-if="['messenger','socialnetworks','collapse','pricing','music','plans','avatar','digitals-product'].includes(typeName(form.block_type_id))">
         <div>
           <label class="block text-xs text-gray-500 mb-1">Options (JSON)</label>
           <textarea x-model="optsJson" rows="9"
@@ -1067,6 +1472,45 @@ if (!$isAuth):
     <div class="flex justify-end gap-3">
       <button @click="sectionModal=false" class="text-gray-400 hover:text-white px-4 py-2 text-sm">Отмена</button>
       <button @click="saveSection()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">Создать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Section settings modal ══ -->
+<div x-show="sectionSettingsModal" x-cloak @click.self="sectionSettingsModal=false"
+  class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+  <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm shadow-2xl p-5 space-y-4">
+    <h3 class="font-semibold" x-text="'Секция: ' + (sectionSettingsTarget?.title||'')"></h3>
+
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">Фон</label>
+        <div class="flex gap-2 items-center">
+          <input type="color" x-model="sectionSettingsForm.bg_color"
+            class="w-10 h-8 rounded cursor-pointer bg-transparent border border-gray-700 p-0.5">
+          <input type="text" x-model="sectionSettingsForm.bg_color" placeholder="transparent / #rrggbb / rgba()"
+            class="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+          <button @click="sectionSettingsForm.bg_color=''" class="text-gray-600 hover:text-red-400 text-lg leading-none">×</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">Отступ сверху (px)</label>
+          <input type="number" x-model.number="sectionSettingsForm.padding_top" min="0" max="200"
+            class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 block mb-1">Отступ снизу (px)</label>
+          <input type="number" x-model.number="sectionSettingsForm.padding_bottom" min="0" max="200"
+            class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-1">
+      <button @click="sectionSettingsModal=false" class="text-gray-400 hover:text-white px-4 py-2 text-sm">Отмена</button>
+      <button @click="saveSectionSettings()"
+        class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">Сохранить</button>
     </div>
   </div>
 </div>
@@ -1125,7 +1569,7 @@ function txtLineHeight(s){const m={h1:'1.15',h2:'1.25',h3:'1.4',sm:'1.45',md:'1.
 function txtWeight(s,bold){if(bold!==undefined&&bold!==null)return bold?'700':'400';return['h1','h2'].includes(s)?'700':'400';}
 function loadGoogleFont(f){if(!f)return;const id='gfont-'+f.replace(/\s+/g,'-');if(!document.getElementById(id)){const l=document.createElement('link');l.id=id;l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(f)+':wght@400;600;700&display=swap';document.head.appendChild(l);}}
 function app(){return{
-  pages:[],blocks:[],sections:[],folders:[],
+  blocks:[],sections:[],folders:[],
   loading:true,
   currentPage:null,currentSection:null,
   blockModal:false,sectionModal:false,pageModal:false,
@@ -1138,15 +1582,31 @@ function app(){return{
   design:{screen:'#ffffff',text_color:'#343a40',link_bg:'#ffffff',link_color:'#343a40',link_radius:7,link_border_width:0,link_border_color:'#ffffff',link_shadow:'none',link_shadow_color:'rgba(0,0,0,.15)',page_font:''},
   designSaving:false,
   settingsLoaded:false,
-  siteSettings:{head_code:'',seo_title:'',seo_description:''},
+  siteSettings:{head_code:'',seo_title:'',seo_description:'',favicon_url:''},
+  faviconUploading:false,
   siteSettingsSaving:false,
+  sectionSettingsModal:false,
+  sectionSettingsTarget:null,
+  sectionSettingsForm:{bg_color:'',padding_top:0,padding_bottom:0},
   siteSettingsLoaded:false,
   _headCm:null,
   subsModal:false,subsLoading:false,submissions:[],_subsBlockId:null,
   allSubmissions:[],allSubsLoading:false,
+  payments:[],paymentsLoading:false,
+  paymentModal:false,paymentSaving:false,paymentError:'',
+  paymentForm:{id:'',provider:'getplatinum',label:'',credentials:{},is_active:false},
+  orders:[],ordersLoading:false,
+  products:[],productsLoading:false,productPages:[],
+  productModal:false,productSaving:false,productError:'',productImageUploading:false,
+  productForm:{id:'',title:'',priceRub:0,image_url:'',success_page_id:'',is_active:true},
+  formProducts:[],
   pageForm:{title:'',slug:'',is_main:false,slugEdited:false,folder_id:null},
 
   _sortable:null,
+  previewLoading:false,
+  picturesUploading:false,
+  _previewSortable:null,
+  _previewListenerAttached:false,
 
   blockTypes:BT_LIST.map(id=>({id,label:LABELS[id]||TYPE_MAP[id],icon:ICONS[TYPE_MAP[id]]||''})),
 
@@ -1158,21 +1618,19 @@ function app(){return{
   },
 
   async init(){
-    await Promise.all([this.loadPages(),this.loadFolders(),this.loadSettings()]);
+    await this.loadSettings();
     this.loading=false;
     this.$watch('activeTab',tab=>{
       if(tab==='settings'){
         this.loadSiteSettings().then(()=>this.$nextTick(()=>this._initHeadCm()));
       }
     });
-  },
-  async loadPages(){
-    const d=await(await fetch('/admin/api.php?action=pages')).json();
-    this.pages=d.pages||[];
-  },
-  async loadFolders(){
-    const d=await(await fetch('/admin/api.php?action=folders')).json();
-    this.folders=(d.folders||[]).map(f=>({...f,_open:false}));
+    const initPageId=new URLSearchParams(location.search).get('page_id');
+    if(initPageId){
+      const d=await fetch('/admin/api.php?action=pages').then(r=>r.json());
+      const pg=(d.pages||[]).find(p=>p.id===initPageId);
+      if(pg)await this.selectPage(pg);
+    }
   },
   async loadBlocks(){
     if(!this.currentPage)return;
@@ -1184,8 +1642,86 @@ function app(){return{
     const d=await(await fetch('/admin/api.php?action=sections&page_id='+this.currentPage.id)).json();
     this.sections=d.sections||[];
   },
-  selectPage(pg){
-    window.location.href='/admin/page-preview.php?page_id='+pg.id;
+  async selectPage(pg){
+    this.currentPage=pg;
+    this.currentSection=null;
+    this.blocks=[];
+    this.sections=[];
+    history.replaceState(null,'','/admin/?page_id='+pg.id);
+    this._initPreviewListeners();
+    await this.loadPagePreview();
+  },
+
+  _initPreviewListeners(){
+    if(this._previewListenerAttached)return;
+    this._previewListenerAttached=true;
+    document.getElementById('pagePreviewArea')?.addEventListener('click', e=>{
+      const btn=e.target.closest('[data-action]');
+      if(!btn)return;
+      e.stopPropagation();
+      const action=btn.dataset.action;
+      const blockId=btn.dataset.blockId;
+      if(action==='addBlock'){this.openAdd();return;}
+      const block=this.blocks.find(b=>b.id===blockId);
+      if(!block)return;
+      if(action==='editBlock') this.openEdit(block);
+      else if(action==='deleteBlock') this.removeBlock(block);
+      else if(action==='toggleVis') this.toggleVis(block);
+    });
+  },
+
+  async loadPagePreview(){
+    if(!this.currentPage)return;
+    this.previewLoading=true;
+    const [fragRes, bd, sd]=await Promise.all([
+      fetch('/admin/render-fragment.php?page_id='+this.currentPage.id).then(r=>r.json()),
+      fetch('/admin/api.php?action=blocks&page_id='+this.currentPage.id).then(r=>r.json()),
+      fetch('/admin/api.php?action=sections&page_id='+this.currentPage.id).then(r=>r.json()),
+    ]);
+    this.blocks=bd.blocks||[];
+    this.sections=sd.sections||[];
+    this.previewLoading=false;
+    const area=document.getElementById('pagePreviewArea');
+    if(area&&fragRes.ok){
+      area.innerHTML=fragRes.html;
+      // Run any <script> tags injected (e.g. timer)
+      area.querySelectorAll('script').forEach(old=>{
+        const s=document.createElement('script');
+        s.textContent=old.textContent;
+        old.replaceWith(s);
+      });
+      this._initSortablePreview();
+    }
+  },
+
+  _initSortablePreview(){
+    // sortable for ungrouped blocks
+    const root=document.getElementById('blocksSortable');
+    if(!root)return;
+    if(this._previewSortable){this._previewSortable.destroy();this._previewSortable=null;}
+    const directWraps=[...root.children].filter(el=>el.classList.contains('admin-block-wrap'));
+    if(directWraps.length){
+      this._previewSortable=Sortable.create(root,{
+        handle:'.drag-handle',animation:150,ghostClass:'opacity-50',
+        filter:'.section-group',
+        onEnd:async()=>{
+          const ids=[...root.querySelectorAll(':scope>.admin-block-wrap')].map(el=>el.dataset.blockId);
+          await fetch('/admin/api.php?action=reorder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
+          await this.loadPagePreview();
+        },
+      });
+    }
+    // sortable per section
+    root.querySelectorAll('.section-group-sortable').forEach(sec=>{
+      Sortable.create(sec,{
+        handle:'.drag-handle',animation:150,ghostClass:'opacity-50',
+        onEnd:async()=>{
+          const ids=[...sec.querySelectorAll('.admin-block-wrap')].map(el=>el.dataset.blockId);
+          await fetch('/admin/api.php?action=reorder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
+          await this.loadPagePreview();
+        },
+      });
+    });
   },
   initSortable(el){
     el=el||document.getElementById('blocksTbody');
@@ -1223,8 +1759,13 @@ function app(){return{
   },
 
   // Page
-  openAddPage(){this.editPageId=null;this.pageForm={title:'',slug:'',is_main:false,slugEdited:false,folder_id:null};this.pageFormError='';this.pageModal=true;},
-  openEditPage(pg){this.editPageId=pg.id;this.pageForm={title:pg.title,slug:pg.slug,is_main:pg.is_main,slugEdited:true,folder_id:pg.folder_id||null};this.pageFormError='';this.pageModal=true;},
+  async openAddPage(){
+    this.editPageId=null;this.pageForm={title:'',slug:'',is_main:false,slugEdited:false,folder_id:null};this.pageFormError='';
+    // load folders for the dropdown
+    const d=await(await fetch('/admin/api.php?action=folders')).json();
+    this.folders=(d.folders||[]);
+    this.pageModal=true;
+  },
   autoSlug(){if(!this.pageForm.slugEdited)this.pageForm.slug=slugify(this.pageForm.title);},
   async savePage(){
     this.pageFormError='';
@@ -1233,60 +1774,49 @@ function app(){return{
     if(this.editPageId){
       const d=await(await fetch('/admin/api.php?action=updatePage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:this.editPageId,title:title.trim(),slug,folder_id:folder_id||null})})).json();
       if(d.ok){
-        const pg=this.pages.find(p=>p.id===this.editPageId);
-        if(pg){pg.title=title.trim();pg.slug=slug;pg.folder_id=folder_id||null;}
-        if(is_main&&!pg.is_main){await this.setMain(this.editPageId);}
-        else if(this.currentPage?.id===this.editPageId){this.currentPage={...this.currentPage,title:title.trim(),slug};}
+        if(is_main){
+          await fetch('/admin/api.php?action=setMain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:this.editPageId})});
+        }
+        if(this.currentPage?.id===this.editPageId){this.currentPage={...this.currentPage,title:title.trim(),slug};}
         this.pageModal=false;
+        window.dispatchEvent(new CustomEvent('sidebar-reload'));
       }
     }else{
       const d=await(await fetch('/admin/api.php?action=addPage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title.trim(),slug,folder_id:folder_id||null})})).json();
       if(d.ok){
-        this.pages.push(d.page);
-        if(is_main)await this.setMain(d.page.id);
+        if(is_main){
+          await fetch('/admin/api.php?action=setMain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:d.page.id})});
+        }
         this.pageModal=false;
+        window.dispatchEvent(new CustomEvent('sidebar-reload'));
         await this.selectPage(d.page);
       }
     }
   },
-  async setMain(id){
-    const d=await(await fetch('/admin/api.php?action=setMain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})})).json();
-    if(d.ok)this.pages.forEach(p=>{p.is_main=p.id===id;});
-  },
-  async deletePage(pg){
-    if(!confirm(`Удалить страницу «${pg.title}»? Блоки будут отвязаны.`))return;
-    const d=await(await fetch('/admin/api.php?action=deletePage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pg.id})})).json();
-    if(d.ok){
-      this.pages=this.pages.filter(p=>p.id!==pg.id);
-      if(this.currentPage?.id===pg.id){this.currentPage=null;this.blocks=[];this.sections=[];}
-    }
-  },
 
   // Folders
-  get pagesWithoutFolder(){return this.pages.filter(p=>!p.folder_id);},
-  pagesInFolder(id){return this.pages.filter(p=>p.folder_id===id);},
   async addFolder(){
     const title=prompt('Название папки:','Папка');
     if(!title||!title.trim())return;
     const d=await(await fetch('/admin/api.php?action=addFolder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title.trim()})})).json();
-    if(d.ok)this.folders.push({...d.folder,_open:false});
-  },
-  async renameFolder(folder){
-    const title=prompt('Переименовать:',folder.title);
-    if(!title||!title.trim()||title.trim()===folder.title)return;
-    const d=await(await fetch('/admin/api.php?action=updateFolder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:folder.id,title:title.trim()})})).json();
-    if(d.ok)folder.title=title.trim();
-  },
-  async deleteFolder(folder){
-    if(!confirm(`Удалить папку «${folder.title}»? Страницы останутся.`))return;
-    const d=await(await fetch('/admin/api.php?action=deleteFolder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:folder.id})})).json();
     if(d.ok){
-      this.pages.forEach(p=>{if(p.folder_id===folder.id)p.folder_id=null;});
-      this.folders=this.folders.filter(f=>f.id!==folder.id);
+      this.folders.push(d.folder);
+      window.dispatchEvent(new CustomEvent('sidebar-reload'));
     }
   },
 
   // Block
+  async uploadPicturesImages(e){
+    this.picturesUploading=true;
+    if(!this.opts.list)this.opts.list=[];
+    for(const file of e.target.files){
+      const fd=new FormData();fd.append('file',file);
+      const r=await fetch('/admin/upload.php',{method:'POST',body:fd}).then(r=>r.json());
+      if(r.url)this.opts.list.push({p:{filename:r.url},s:'',t:'',link:{title:'',type:'link',value:''}});
+    }
+    e.target.value='';
+    this.picturesUploading=false;
+  },
   selectType(id){this.form.block_type_id=id;this.opts={};this.optsJson=PLACEHOLDERS[TYPE_MAP[id]]||'{}';},
   openAdd(){
     this.editId=null;
@@ -1318,7 +1848,7 @@ function app(){return{
     };
     try{
       const d=await(await fetch('/admin/api.php?action=save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json();
-      if(d.ok){await this.loadBlocks();this.blockModal=false;}
+      if(d.ok){this.blockModal=false;await this.loadPagePreview();}
       else this.formError=d.error||'Ошибка';
     }catch{this.formError='Ошибка сети';}
     finally{this.saving=false;}
@@ -1326,12 +1856,12 @@ function app(){return{
   async removeBlock(b){
     if(!confirm(`Удалить блок «${LABELS[b.block_type_id]||b.block_type_name}»?`))return;
     const d=await(await fetch('/admin/api.php?action=delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:b.id})})).json();
-    if(d.ok)this.blocks=this.blocks.filter(x=>x.id!==b.id);
+    if(d.ok){this.blocks=this.blocks.filter(x=>x.id!==b.id);await this.loadPagePreview();}
   },
   async toggleVis(b){
     const nv=!b.is_visible;
     const d=await(await fetch('/admin/api.php?action=toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:b.id,is_visible:nv})})).json();
-    if(d.ok)b.is_visible=nv;
+    if(d.ok){b.is_visible=nv;await this.loadPagePreview();}
   },
 
   // Section
@@ -1348,6 +1878,27 @@ function app(){return{
       this.sections=this.sections.filter(s=>s.id!==id);
       if(this.currentSection===id)this.currentSection=null;
       this.blocks.forEach(b=>{if(b.section_id===id)b.section_id=null;});
+    }
+  },
+  openSectionSettings(sec){
+    this.sectionSettingsTarget=sec;
+    const o=sec.options||{};
+    this.sectionSettingsForm={
+      bg_color:o.bg_color||'',
+      padding_top:o.padding_top||0,
+      padding_bottom:o.padding_bottom||0,
+    };
+    this.sectionSettingsModal=true;
+  },
+  async saveSectionSettings(){
+    const id=this.sectionSettingsTarget?.id;
+    if(!id)return;
+    const options={...this.sectionSettingsForm};
+    const d=await(await fetch('/admin/api.php?action=updateSection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,options})})).json();
+    if(d.ok){
+      const sec=this.sections.find(s=>s.id===id);
+      if(sec)sec.options=options;
+      this.sectionSettingsModal=false;
     }
   },
   async loadSettings(){
@@ -1371,6 +1922,47 @@ function app(){return{
       const d=await(await fetch('/admin/api.php?action=submissions')).json();
       this.allSubmissions=d.submissions||[];
     }finally{this.allSubsLoading=false;}
+  },
+  async loadPayments(){
+    this.paymentsLoading=true;
+    try{
+      const d=await(await fetch('/admin/api.php?action=payments')).json();
+      this.payments=d.payments||[];
+      if(this.payments.length>0)this.loadOrders();
+    }finally{this.paymentsLoading=false;}
+  },
+  openAddPayment(provider='getplatinum'){
+    this.paymentForm={id:'',provider:'getplatinum',label:'',credentials:{},is_active:true};
+    this.paymentError='';this.paymentModal=true;
+  },
+  editPayment(pm){
+    this.paymentForm={id:pm.id,provider:'getplatinum',label:pm.label,credentials:{...pm.credentials},is_active:pm.is_active};
+    this.paymentError='';this.paymentModal=true;
+  },
+  async savePayment(){
+    this.paymentForm.provider='getplatinum';
+    if(!this.paymentForm.credentials.api_key){this.paymentError='Укажите API-ключ';return;}
+    this.paymentSaving=true;this.paymentError='';
+    try{
+      const d=await(await fetch('/admin/api.php?action=savePayment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.paymentForm)})).json();
+      if(d.ok){await this.loadPayments();this.paymentModal=false;}
+      else this.paymentError=d.error||'Ошибка';
+    }catch{this.paymentError='Ошибка сети';}
+    finally{this.paymentSaving=false;}
+  },
+  async togglePayment(pm){
+    const d=await(await fetch('/admin/api.php?action=togglePayment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pm.id})})).json();
+    if(d.ok)pm.is_active=d.is_active;
+  },
+  async deletePayment(pm){
+    if(!confirm('Удалить подключение GetPlatinum?'))return;
+    const d=await(await fetch('/admin/api.php?action=deletePayment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pm.id})})).json();
+    if(d.ok)this.payments=this.payments.filter(x=>x.id!==pm.id);
+  },
+  async loadOrders(){
+    this.ordersLoading=true;
+    try{const d=await(await fetch('/admin/api.php?action=orders')).json();this.orders=d.orders||[];}
+    finally{this.ordersLoading=false;}
   },
   async deleteAllSub(s){
     if(!confirm('Удалить заявку?'))return;
@@ -1407,6 +1999,73 @@ function app(){return{
       await fetch('/admin/api.php?action=saveSiteSettings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.siteSettings)});
     }finally{this.siteSettingsSaving=false;}
   },
+  async loadFormProducts(){
+    try{
+      const d=await(await fetch('/admin/api.php?action=products')).json();
+      this.formProducts=(d.products||[]).filter(p=>p.is_active);
+    }catch{}
+  },
+
+  // Products
+  async loadProducts(){
+    this.productsLoading=true;
+    try{
+      const [pd,pgd]=await Promise.all([
+        fetch('/admin/api.php?action=products').then(r=>r.json()),
+        fetch('/admin/api.php?action=pages').then(r=>r.json()),
+      ]);
+      this.products=pd.products||[];
+      this.productPages=pgd.pages||[];
+    }finally{this.productsLoading=false;}
+  },
+  productPageTitle(pageId){
+    const pg=this.productPages.find(p=>p.id===pageId);
+    return pg?pg.title:'—';
+  },
+  openProductModal(){
+    this.productForm={id:'',title:'',priceRub:0,image_url:'',success_page_id:'',is_active:true};
+    this.productError='';this.productModal=true;
+  },
+  editProduct(prod){
+    this.productForm={id:prod.id,title:prod.title,priceRub:prod.price/100,image_url:prod.image_url||'',success_page_id:prod.success_page_id||'',is_active:prod.is_active};
+    this.productError='';this.productModal=true;
+  },
+  async uploadProductImage(e){
+    const file=e.target.files[0];if(!file)return;
+    this.productImageUploading=true;
+    try{
+      const fd=new FormData();fd.append('file',file);
+      const r=await fetch('/admin/upload.php',{method:'POST',body:fd}).then(r=>r.json());
+      if(r.url)this.productForm.image_url=r.url;
+      else this.productError=r.error||'Ошибка загрузки';
+    }finally{this.productImageUploading=false;e.target.value='';}
+  },
+  async saveProduct(){
+    this.productError='';
+    if(!this.productForm.title.trim()){this.productError='Введите название';return;}
+    if(!this.productForm.priceRub||this.productForm.priceRub<=0){this.productError='Укажите цену';return;}
+    this.productSaving=true;
+    try{
+      const d=await(await fetch('/admin/api.php?action=saveProduct',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        id:this.productForm.id||undefined,
+        title:this.productForm.title.trim(),
+        price:Math.round(this.productForm.priceRub*100),
+        currency:'RUB',
+        image_url:this.productForm.image_url||null,
+        success_page_id:this.productForm.success_page_id||null,
+        is_active:this.productForm.is_active,
+      })})).json();
+      if(d.ok){this.productModal=false;await this.loadProducts();}
+      else this.productError=d.error||'Ошибка';
+    }catch{this.productError='Ошибка сети';}
+    finally{this.productSaving=false;}
+  },
+  async deleteProduct(prod){
+    if(!confirm(`Удалить товар «${prod.title}»?`))return;
+    const d=await(await fetch('/admin/api.php?action=deleteProduct',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:prod.id})})).json();
+    if(d.ok)this.products=this.products.filter(x=>x.id!==prod.id);
+  },
+
   _initHeadCm(){
     const el=document.getElementById('headCodeEditor');
     if(!el||this._headCm)return;
