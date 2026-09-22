@@ -1,5 +1,5 @@
-<div x-data="templateSave" @save-page-template.window="show($event.detail.page)" @keydown.escape.window="close()">
-  <div class="tpl-overlay" x-show="open" x-cloak @click.self="close()">
+<div x-data="templateSave" x-show="open" x-cloak style="display:none" @save-page-template.window="show($event.detail.page)" @keydown.escape.window="close()">
+  <div class="tpl-overlay" @click.self="close()" style="position:fixed;inset:0;z-index:70;background:rgba(17,24,39,.6);display:flex;align-items:center;justify-content:center;padding:20px">
     <section class="tpl-save-dialog" role="dialog" aria-modal="true" aria-labelledby="templateSaveTitle">
       <header><h2 id="templateSaveTitle">Сохранить как шаблон</h2><button type="button" @click="close()" :disabled="saving" aria-label="Закрыть">×</button></header>
       <form @submit.prevent="save()" x-show="!success">
