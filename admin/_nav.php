@@ -39,6 +39,12 @@
       <button @click="activeTab='products';loadProducts()"
         :class="activeTab==='products'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Товары</button>
+      <button @click="activeTab='modules'"
+        :class="activeTab==='modules'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
+        class="px-3 py-1.5 rounded-lg text-sm transition-colors">Модули</button>
+      <button x-show="modulesUI.emailLoaded && moduleEmail.domain" @click="activeTab='mailings';loadMailings()"
+        :class="activeTab==='mailings'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
+        class="px-3 py-1.5 rounded-lg text-sm transition-colors">Рассылки</button>
     <?php else: ?>
       <a href="/admin/"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors text-gray-500 hover:text-gray-200 hover:bg-gray-800 no-underline">Страницы</a>

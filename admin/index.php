@@ -615,6 +615,236 @@ if (!$isAuth):
       </div>
     </div>
   </div>
+
+  <!-- Modules tab -->
+  <div x-show="activeTab==='modules'" x-cloak class="flex-1 overflow-y-auto sb p-8 flex justify-center">
+    <div class="w-full max-w-2xl space-y-6">
+      <h2 class="text-lg font-semibold text-white">Модули</h2>
+
+      <!-- Category: Email -->
+      <div class="space-y-3">
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Email
+        </div>
+
+        <!-- Module: Personal email mailing -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <button @click="modulesUI.emailOpen=!modulesUI.emailOpen;if(modulesUI.emailOpen)loadModuleEmail()"
+            class="w-full flex items-center justify-between px-5 py-4 text-left transition-colors" style="opacity:.85" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.85'">
+            <div>
+              <div class="text-sm font-medium text-white">Рассылка с личного аккаунта</div>
+              <div class="text-xs text-gray-500 mt-0.5">Отправка писем через вашу личную почту (Mail.ru / Яндекс)</div>
+            </div>
+            <svg class="w-4 h-4 text-gray-500 transition-transform shrink-0 ml-3" :class="modulesUI.emailOpen?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div x-show="modulesUI.emailOpen" x-transition class="border-t border-gray-800 px-5 py-5 space-y-4">
+            <!-- Loading -->
+            <div x-show="modulesUI.emailLoading" class="flex justify-center py-4">
+              <svg class="animate-spin w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            </div>
+            <div x-show="!modulesUI.emailLoading" class="space-y-4">
+              <!-- Mail provider -->
+              <div>
+                <label class="block text-xs text-gray-500 mb-1.5">Тип почты</label>
+                <div class="flex gap-2">
+                  <button @click="moduleEmail.provider='mail'"
+                    :class="moduleEmail.provider==='mail' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'"
+                    class="flex-1 flex items-center justify-center gap-2 border rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                    Mail.ru
+                  </button>
+                  <button @click="moduleEmail.provider='yandex'"
+                    :class="moduleEmail.provider==='yandex' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'"
+                    class="flex-1 flex items-center justify-center gap-2 border rounded-lg px-3 py-2.5 text-sm font-medium transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                    Яндекс
+                  </button>
+                </div>
+              </div>
+
+              <!-- SMTP Username -->
+              <div>
+                <label class="block text-xs text-gray-500 mb-1.5">SMTP Username (доменная почта)</label>
+                <input type="email" x-model="moduleEmail.domain" placeholder="info@example.com" required
+                  class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+              </div>
+
+              <!-- Sender -->
+              <div>
+                <label class="block text-xs text-gray-500 mb-1.5">Адрес отправителя</label>
+                <div class="flex gap-2">
+                  <input type="email" x-model="moduleEmail.sender" placeholder="info@example.com" required
+                    class="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+                  <button x-show="moduleEmail.domain && moduleEmail.sender!==moduleEmail.domain"
+                    @click="moduleEmail.sender=moduleEmail.domain"
+                    class="shrink-0 text-xs text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 px-2.5 py-2 rounded-lg transition-colors whitespace-nowrap">
+                    <span x-text="moduleEmail.domain"></span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div>
+                <label class="block text-xs text-gray-500 mb-1.5">Пароль приложения</label>
+                <div class="relative">
+                  <input :type="modulesUI.emailShowPass?'text':'password'" x-model="moduleEmail.password" placeholder="Пароль для SMTP" required
+                    class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+                  <button type="button" @click="modulesUI.emailShowPass=!modulesUI.emailShowPass"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-1">
+                    <svg x-show="!modulesUI.emailShowPass" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <svg x-show="modulesUI.emailShowPass" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                  </button>
+                </div>
+                <p class="text-xs text-gray-600 mt-1.5">Для Mail.ru и Яндекс используйте <a href="https://id.mail.ru/security/passwords" target="_blank" class="text-blue-400 hover:underline">пароль приложения</a>, а не основной пароль.</p>
+              </div>
+
+              <!-- Save -->
+              <div class="flex items-center justify-between pt-2">
+                <p class="text-xs text-red-400" x-show="modulesUI.emailError" x-text="modulesUI.emailError"></p>
+                <p class="text-xs text-green-400" x-show="modulesUI.emailSaved" x-transition>Сохранено</p>
+                <div></div>
+                <button @click="saveModuleEmail()" :disabled="modulesUI.emailSaving||!moduleEmail.domain||!moduleEmail.sender||!moduleEmail.password"
+                  class="text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  style="background:#1f6feb" onmouseover="this.style.background='#388bfd'" onmouseout="this.style.background='#1f6feb'"
+                  x-text="modulesUI.emailSaving?'Сохраняю…':'Сохранить'"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Mailings tab -->
+  <div x-show="activeTab==='mailings'" x-cloak class="flex-1 overflow-y-auto sb p-8 flex justify-center">
+    <div class="w-full max-w-2xl space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-white">Рассылки</h2>
+        <button @click="openMailingEditor()"
+          class="flex items-center gap-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Новая рассылка
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div x-show="mailingsLoading" class="flex justify-center py-12">
+        <svg class="animate-spin w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+      </div>
+
+      <!-- Empty -->
+      <div x-show="!mailingsLoading && mailings.length===0" class="text-center py-12 text-gray-600 text-sm">
+        Рассылок пока нет
+      </div>
+
+      <!-- Mailing cards -->
+      <div x-show="!mailingsLoading" class="space-y-3">
+        <template x-for="ml in mailings" :key="ml.id">
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between gap-4">
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-medium text-white truncate" x-text="ml.subject"></div>
+              <div class="text-xs text-gray-500 mt-1" x-text="'Шаблон: '+mailingTemplateLabel(ml.template)"></div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button @click="editMailing(ml)" class="text-xs text-gray-400 hover:text-white hover:bg-gray-800 px-2.5 py-1.5 rounded-lg transition-colors">Редактировать</button>
+              <button @click="deleteMailing(ml)" class="text-xs text-red-400 hover:bg-red-900/30 px-2.5 py-1.5 rounded-lg transition-colors">Удалить</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Mailing editor modal ══ -->
+<div x-show="mailingModal" x-cloak @click.self="mailingModal=false"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.7)">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl" style="max-height:90vh">
+    <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between shrink-0">
+      <h3 class="font-semibold text-white" x-text="mailingForm.id ? 'Редактировать рассылку' : 'Новая рассылка'"></h3>
+      <button @click="mailingModal=false" class="text-gray-500 hover:text-white p-1 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto sb p-5 space-y-5">
+
+      <!-- Template picker -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-2">Шаблон оформления</label>
+        <div class="grid grid-cols-3 gap-3">
+          <template x-for="tpl in mailingTemplates" :key="tpl.id">
+            <button @click="mailingForm.template=tpl.id;applyMailingTemplate(tpl.id)"
+              :class="mailingForm.template===tpl.id ? 'border-blue-500 ring-1 ring-blue-500/40' : 'border-gray-700 hover:border-gray-500'"
+              class="border rounded-xl overflow-hidden text-left transition-all group">
+              <div class="bg-white p-3 pointer-events-none" style="transform:scale(.55);transform-origin:top left;height:150px;width:182%;overflow:hidden">
+                <div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#333" x-html="mailingTplPreview(tpl.id)"></div>
+              </div>
+              <div class="px-3 py-2 border-t" :class="mailingForm.template===tpl.id ? 'border-blue-500/30 bg-blue-500/10' : 'border-gray-700 bg-gray-800'">
+                <div class="text-xs font-medium text-white" x-text="tpl.label"></div>
+              </div>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1.5">Тема письма</label>
+        <input type="text" x-model="mailingForm.subject" placeholder="Тема рассылки" required
+          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+      </div>
+
+      <!-- Variables -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1.5">Переменные <span class="text-gray-600">— нажмите, чтобы вставить</span></label>
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" @click="insertMailingVar('{{name}}')"
+            class="text-xs bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 px-2.5 py-1.5 rounded-lg transition-colors font-mono">{{name}} <span class="text-gray-500 font-sans ml-1">Имя</span></button>
+          <button type="button" @click="insertMailingVar('{{product}}')"
+            class="text-xs bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 px-2.5 py-1.5 rounded-lg transition-colors font-mono">{{product}} <span class="text-gray-500 font-sans ml-1">Товар</span></button>
+          <button type="button" @click="insertMailingVar('{{price}}')"
+            class="text-xs bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 px-2.5 py-1.5 rounded-lg transition-colors font-mono">{{price}} <span class="text-gray-500 font-sans ml-1">Цена</span></button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs text-gray-500" x-text="mailingForm.isHtml?'HTML-код письма':'Текст письма'"></label>
+          <button type="button" @click="toggleMailingHtml()"
+            :class="mailingForm.isHtml ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'"
+            class="flex items-center gap-1.5 text-xs border px-2.5 py-1 rounded-lg transition-colors font-mono">
+            &lt;/&gt; <span class="font-sans" x-text="mailingForm.isHtml?'HTML':'Текст'"></span>
+          </button>
+        </div>
+        <textarea x-ref="mailingBody" x-model="mailingForm.body" rows="14" required
+          :placeholder="mailingForm.isHtml?'<table>\\n  <tr>\\n    <td>Контент письма</td>\\n  </tr>\\n</table>':'Текст рассылки…'"
+          class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors font-mono leading-relaxed resize-y"></textarea>
+      </div>
+
+      <!-- Preview -->
+      <div>
+        <label class="block text-xs text-gray-500 mb-1.5">Предпросмотр</label>
+        <div class="border border-gray-700 rounded-xl overflow-hidden">
+          <div x-show="!mailingForm.isHtml" class="bg-white p-5 text-sm text-gray-800 leading-relaxed" style="min-height:100px" x-html="mailingPreviewHtml"></div>
+          <iframe x-show="mailingForm.isHtml" style="width:100%;min-height:360px;border:0;background:#fff"
+            :srcdoc="mailingPreviewHtml"></iframe>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <p class="text-xs text-red-400" x-show="mailingError" x-text="mailingError"></p>
+    </div>
+    <div class="px-5 py-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+      <button @click="mailingModal=false" class="text-gray-400 hover:text-white px-4 py-2 text-sm transition-colors">Отмена</button>
+      <button @click="saveMailing()" :disabled="mailingSaving||!mailingForm.subject||!mailingForm.body"
+        class="text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+        style="background:#1f6feb" onmouseover="this.style.background='#388bfd'" onmouseout="this.style.background='#1f6feb'"
+        x-text="mailingSaving?'Сохраняю…':'Сохранить'"></button>
+    </div>
+  </div>
 </div>
 
 <!-- ══ Product modal ══ -->
@@ -844,7 +1074,17 @@ if (!$isAuth):
       </button>
     </div>
 
-    <div class="overflow-y-auto sb p-5 space-y-4 flex-1">
+    <!-- Tabs for form blocks -->
+    <div x-show="typeName(form.block_type_id)==='form'" class="px-5 pt-3 border-b border-gray-800 flex gap-0 shrink-0">
+      <button type="button" @click="blockModalTab='content'"
+        :class="blockModalTab==='content'?'border-blue-500 text-white':'border-transparent text-gray-500 hover:text-gray-300'"
+        class="px-3 pb-2.5 text-sm border-b-2 transition-colors">Контент</button>
+      <button type="button" @click="blockModalTab='modules';loadMailingsIfNeeded()"
+        :class="blockModalTab==='modules'?'border-blue-500 text-white':'border-transparent text-gray-500 hover:text-gray-300'"
+        class="px-3 pb-2.5 text-sm border-b-2 transition-colors">Модули</button>
+    </div>
+
+    <div x-show="blockModalTab==='content'" class="overflow-y-auto sb p-5 space-y-4 flex-1">
 
       <!-- Type grid (add) -->
       <div x-show="!editId">
@@ -1321,7 +1561,11 @@ if (!$isAuth):
           <div>
             <label class="text-sm text-gray-400 mb-2 block">Поля формы</label>
             <div class="flex flex-wrap gap-1">
-              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:3,title:'Имя',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:1,title:'Имя',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Имя</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:2,title:'ФИО',text:'',required:false,idx:(opts.fields||[]).length+1}]"
+                class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ ФИО</button>
+              <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:3,title:'',text:'',required:false,idx:(opts.fields||[]).length+1}]"
                 class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Текст</button>
               <button type="button" @click="opts.fields = [...(opts.fields||[]), {type_id:5,title:'Телефон',text:'',required:false,idx:(opts.fields||[]).length+1}]"
                 class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Телефон</button>
@@ -1343,10 +1587,14 @@ if (!$isAuth):
                 class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2 py-1 rounded">+ Страна</button>
             </div>
           </div>
+          <div x-ref="formFieldsList" class="space-y-2">
           <template x-for="(field, fi) in (opts.fields||[])" :key="fi">
             <div class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 space-y-2">
               <div class="flex gap-2 items-center">
-                <span class="text-xs text-gray-500 w-14 shrink-0" x-text="({3:'Текст',5:'Тел.',6:'Email',7:'Выбор',8:'Страна',9:'Дата',10:'Список',11:'Галочка',12:'Число',13:'Время'})[field.type_id]||'Текст'"></span>
+                <span class="form-field-handle cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 shrink-0" title="Перетащить">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
+                </span>
+                <span class="text-xs text-gray-500 w-14 shrink-0" x-text="({1:'Имя',2:'ФИО',3:'Текст',5:'Тел.',6:'Email',7:'Выбор',8:'Страна',9:'Дата',10:'Список',11:'Галочка',12:'Число',13:'Время'})[field.type_id]||'Текст'"></span>
                 <input type="text" x-model="field.title" placeholder="Подпись"
                   class="flex-1 bg-transparent text-white text-sm focus:outline-none min-w-0">
                 <label class="flex items-center gap-1 text-xs text-gray-500 shrink-0 cursor-pointer">
@@ -1374,6 +1622,7 @@ if (!$isAuth):
               </template>
             </div>
           </template>
+          </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">Текст кнопки</label>
             <input type="text" x-model="opts.form_btn" placeholder="Отправить"
@@ -1722,6 +1971,47 @@ if (!$isAuth):
       <p x-show="formError" class="text-red-400 text-sm" x-text="formError"></p>
     </div>
 
+    <!-- Modules tab (form blocks only) -->
+    <div x-show="blockModalTab==='modules'" class="overflow-y-auto sb p-5 space-y-4 flex-1">
+      <template x-if="!modulesUI.emailLoaded || !moduleEmail.domain">
+        <div class="text-center py-8 text-gray-600 text-sm">
+          <p>Email-модуль не настроен.</p>
+          <a href="/admin/?tab=modules" class="text-blue-400 hover:underline text-xs mt-1 inline-block">Настроить в Модулях</a>
+        </div>
+      </template>
+      <template x-if="modulesUI.emailLoaded && moduleEmail.domain">
+        <div class="space-y-4">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Рассылки
+          </div>
+          <div x-show="mailingsLoading" class="flex justify-center py-4">
+            <svg class="animate-spin w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+          </div>
+          <div x-show="!mailingsLoading && mailings.length===0" class="text-sm text-gray-600">
+            Рассылок нет. <a href="/admin/?tab=mailings" class="text-blue-400 hover:underline">Создать рассылку</a>
+          </div>
+          <template x-for="ml in mailings" :key="ml.id">
+            <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 space-y-2">
+              <div class="text-sm font-medium text-white" x-text="ml.subject"></div>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" class="accent-blue-500"
+                  :checked="(opts.mailings||[]).some(m=>m.id===ml.id&&m.on_submit)"
+                  @change="toggleFormMailing(ml.id,'on_submit',$event.target.checked)">
+                <span class="text-sm text-gray-400">Отправить после заполнения формы</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer" x-show="opts.product_id">
+                <input type="checkbox" class="accent-blue-500"
+                  :checked="(opts.mailings||[]).some(m=>m.id===ml.id&&m.on_payment)"
+                  @change="toggleFormMailing(ml.id,'on_payment',$event.target.checked)">
+                <span class="text-sm text-gray-400">Отправить после оплаты</span>
+              </label>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+
     <div class="px-5 py-4 border-t border-gray-800 flex justify-end gap-3 shrink-0">
       <button @click="blockModal=false" class="text-gray-400 hover:text-white px-4 py-2 text-sm transition-colors">Отмена</button>
       <button @click="saveBlock()" :disabled="saving"
@@ -1844,7 +2134,7 @@ function app(){return{
   blocks:[],sections:[],folders:[],
   loading:true,
   currentPage:null,currentSection:null,
-  blockModal:false,sectionModal:false,pageModal:false,
+  blockModal:false,blockModalTab:'content',sectionModal:false,pageModal:false,
   editId:null,editPageId:null,
   saving:false,formError:'',pageFormError:'',
   newSectionTitle:'',
@@ -1872,6 +2162,16 @@ function app(){return{
   productModal:false,productSaving:false,productError:'',productImageUploading:false,
   productForm:{id:'',title:'',priceRub:0,image_url:'',success_page_id:'',is_active:true},
   formProducts:[],
+  moduleEmail:{provider:'mail',domain:'',sender:'',password:''},
+  modulesUI:{emailOpen:false,emailLoading:false,emailSaving:false,emailSaved:false,emailShowPass:false,emailLoaded:false,emailError:''},
+  mailings:[],mailingsLoading:false,
+  mailingModal:false,mailingSaving:false,mailingError:'',
+  mailingForm:{id:'',subject:'',body:'',template:'plain',isHtml:false},_mailingTextBackup:'',
+  mailingTemplates:[
+    {id:'plain',label:'Простой',desc:'Только текст'},
+    {id:'minimal',label:'Минимальный',desc:'С заголовком'},
+    {id:'card',label:'Карточка',desc:'В рамке'},
+  ],
   pageForm:{title:'',slug:'',is_main:false,slugEdited:false,folder_id:null},
 
   _sortable:null,
@@ -1896,9 +2196,21 @@ function app(){return{
       if(tab==='settings'){
         this.loadSiteSettings().then(()=>this.$nextTick(()=>this._initHeadCm()));
       }
+      const u=new URL(location.href);
+      if(tab==='pages'){u.searchParams.delete('tab');if(this.currentPage)u.searchParams.set('page_id',this.currentPage.id);else u.searchParams.delete('page_id');}
+      else{u.searchParams.set('tab',tab);u.searchParams.delete('page_id');}
+      history.replaceState(null,'',u.pathname+u.search);
     });
     const params=new URLSearchParams(location.search);
-    if(params.get('tab')==='templates')this.activeTab='templates';
+    const initTab=params.get('tab');
+    this.loadModuleEmail();
+    if(initTab&&['templates','design','settings','submissions','payments','products','modules','mailings'].includes(initTab)){
+      this.activeTab=initTab;
+      if(initTab==='submissions')this.loadAllSubmissions();
+      if(initTab==='payments')this.loadPayments();
+      if(initTab==='products')this.loadProducts();
+      if(initTab==='mailings')this.loadMailings();
+    }
     const initPageId=params.get('page_id');
     if(initPageId){
       const d=await fetch('/admin/api.php?action=pages').then(r=>r.json());
@@ -2092,17 +2404,19 @@ function app(){return{
     e.target.value='';
     this.picturesUploading=false;
   },
-  selectType(id){this.form.block_type_id=id;var n=TYPE_MAP[id];this.opts=n==='messenger'?{items:[{messenger:'telegram',v:'',t:'',i:null}]}:n==='socialnetworks'?{items:[{type:'instagram',link:''}]}:n==='music'?{items:[{type:'file',value:'',title:''}]}:n==='pricing'?{fields:[{title:'',price:0}]}:n==='collapse'?{fields:[{title:'',text:'',opened:false}]}:n==='plans'?{fields:[{title:'',price:0,description:''}]}:{};this.optsJson=PLACEHOLDERS[n]||'{}';},
+  selectType(id){this.form.block_type_id=id;var n=TYPE_MAP[id];this.opts=n==='messenger'?{items:[{messenger:'telegram',v:'',t:'',i:null}]}:n==='socialnetworks'?{items:[{type:'instagram',link:''}]}:n==='music'?{items:[{type:'file',value:'',title:''}]}:n==='pricing'?{fields:[{title:'',price:0}],currency:'₽'}:n==='collapse'?{fields:[{title:'',text:'',opened:false}]}:n==='plans'?{fields:[{title:'',price:0,description:''}]}:{};this.optsJson=PLACEHOLDERS[n]||'{}';},
   openAdd(){
     this.editId=null;
     this.form={block_type_id:1,section_id:this.currentSection||'',is_visible:true,anchor:''};
-    this.opts={};this.optsJson='{}';this.formError='';this.blockModal=true;
+    this.opts={};this.optsJson='{}';this.formError='';this.blockModalTab='content';this.blockModal=true;
+    this.initFormFieldsSortable();
   },
   openEdit(b){
     this.editId=b.id;
     this.form={block_type_id:b.block_type_id,section_id:b.section_id||'',is_visible:!!b.is_visible,anchor:b.anchor||''};
     const o=b.options||{};this.opts={...o};this.optsJson=JSON.stringify(o,null,2);
-    this.formError='';this.blockModal=true;
+    this.formError='';this.blockModalTab='content';this.blockModal=true;
+    this.initFormFieldsSortable();
   },
   getOptions(){
     const t=this.typeName(this.form.block_type_id);
@@ -2339,6 +2653,154 @@ function app(){return{
     if(!confirm(`Удалить товар «${prod.title}»?`))return;
     const d=await(await fetch('/admin/api.php?action=deleteProduct',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:prod.id})})).json();
     if(d.ok)this.products=this.products.filter(x=>x.id!==prod.id);
+  },
+
+  async loadModuleEmail(){
+    if(this.modulesUI.emailLoaded)return;
+    this.modulesUI.emailLoading=true;
+    try{
+      const d=await(await fetch('/admin/api.php?action=getModuleSettings&module=email')).json();
+      if(d.settings){
+        this.moduleEmail.provider=d.settings.provider||'mail';
+        this.moduleEmail.domain=d.settings.domain||'';
+        this.moduleEmail.sender=d.settings.sender||'';
+        this.moduleEmail.password=d.settings.password||'';
+      }
+      this.modulesUI.emailLoaded=true;
+    }catch(e){}
+    this.modulesUI.emailLoading=false;
+  },
+  async saveModuleEmail(){
+    if(!this.moduleEmail.domain||!this.moduleEmail.sender||!this.moduleEmail.password){this.modulesUI.emailError='Заполните все поля';return;}
+    this.modulesUI.emailError='';
+    this.modulesUI.emailSaving=true;
+    this.modulesUI.emailSaved=false;
+    await fetch('/admin/api.php?action=saveModuleSettings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({module:'email',settings:this.moduleEmail})});
+    this.modulesUI.emailSaving=false;
+    this.modulesUI.emailSaved=true;
+    setTimeout(()=>this.modulesUI.emailSaved=false,3000);
+  },
+
+  _formFieldsSortable:null,
+  initFormFieldsSortable(){
+    this.$nextTick(()=>{
+      const el=this.$refs.formFieldsList;
+      if(!el)return;
+      if(this._formFieldsSortable){this._formFieldsSortable.destroy();this._formFieldsSortable=null;}
+      this._formFieldsSortable=Sortable.create(el,{
+        handle:'.form-field-handle',
+        animation:150,
+        ghostClass:'opacity-30',
+        onEnd:(evt)=>{
+          const arr=[...(this.opts.fields||[])];
+          const [moved]=arr.splice(evt.oldIndex,1);
+          arr.splice(evt.newIndex,0,moved);
+          this.opts.fields=arr;
+        }
+      });
+    });
+  },
+  toggleFormMailing(mailingId,trigger,checked){
+    if(!this.opts.mailings)this.opts.mailings=[];
+    let entry=this.opts.mailings.find(m=>m.id===mailingId);
+    if(!entry){entry={id:mailingId,on_submit:false,on_payment:false};this.opts.mailings.push(entry);}
+    entry[trigger]=checked;
+    this.opts.mailings=this.opts.mailings.filter(m=>m.on_submit||m.on_payment);
+  },
+  async loadMailingsIfNeeded(){
+    if(!this.mailings.length&&!this.mailingsLoading)await this.loadMailings();
+  },
+
+  // ── Mailings ──
+  async loadMailings(){
+    this.mailingsLoading=true;
+    try{const d=await(await fetch('/admin/api.php?action=mailings')).json();this.mailings=d.mailings||[];}
+    finally{this.mailingsLoading=false;}
+  },
+  mailingTemplateLabel(id){return({plain:'Простой',minimal:'Минимальный',card:'Карточка'})[id]||id;},
+  openMailingEditor(){
+    this.mailingForm={id:'',subject:'',body:'',template:'plain',isHtml:false};
+    this.mailingError='';this.mailingModal=true;
+  },
+  editMailing(ml){
+    this.mailingForm={id:ml.id,subject:ml.subject,body:ml.body,template:ml.template||'plain',isHtml:ml.template==='html'};
+    this.mailingError='';this.mailingModal=true;
+  },
+  _mailingTplBodies:{
+    plain:'Здравствуйте, {{name}}!\n\nСпасибо за покупку «{{product}}».\n\nСумма: {{price}}\n\nС уважением,\nВаша команда',
+    minimal:'{{name}}, спасибо за заказ!\n\nВы приобрели: {{product}}\nСтоимость: {{price}}\n\nЕсли у вас есть вопросы — просто ответьте на это письмо.',
+    card:'Уважаемый(ая) {{name}},\n\nВаш заказ подтверждён\n\nТовар: {{product}}\nСумма: {{price}}\n\nМы свяжемся с вами для уточнения деталей.\n\nСпасибо, что выбрали нас!',
+  },
+  _mailingWrap(id,html){
+    if(id==='plain')return '<div style="font-family:Arial,sans-serif;color:#333;line-height:1.6">'+html+'</div>';
+    if(id==='minimal')return '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
+      +'<div style="border-bottom:3px solid #3b82f6;padding-bottom:12px;margin-bottom:16px;font-weight:700;font-size:15px;color:#3b82f6">✉ Рассылка</div>'
+      +'<div style="color:#333;line-height:1.6">'+html+'</div>'
+      +'<div style="margin-top:20px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af">Вы получили это письмо, потому что подписаны на рассылку.</div>'
+      +'</div>';
+    if(id==='card')return '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#f9fafb;padding:24px;border-radius:0">'
+      +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px">'
+      +'<div style="font-weight:700;font-size:16px;color:#111;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #3b82f6">Подтверждение заказа</div>'
+      +'<div style="color:#333;line-height:1.6">'+html+'</div>'
+      +'</div>'
+      +'<div style="text-align:center;margin-top:16px;font-size:11px;color:#9ca3af">© 2026 Ваша компания</div>'
+      +'</div>';
+    return html;
+  },
+  _mailingSubstVars(text){
+    const vars={'{{name}}':'Иван','{{product}}':'Онлайн-курс','{{price}}':'9 900 ₽'};
+    return text.replace(/\{\{(name|product|price)\}\}/g,m=>vars[m]||m);
+  },
+  _mailingTextToHtml(text){
+    let t=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return t.replace(/\n/g,'<br>');
+  },
+  mailingTplPreview(id){
+    const body=this._mailingTplBodies[id]||'';
+    return this._mailingWrap(id,this._mailingTextToHtml(this._mailingSubstVars(body)));
+  },
+  applyMailingTemplate(id){
+    if(this.mailingForm.body&&!confirm('Заменить текст шаблоном?'))return;
+    this.mailingForm.body=this._mailingTplBodies[id]||'';
+    this.mailingForm.isHtml=false;
+  },
+  toggleMailingHtml(){
+    if(!this.mailingForm.isHtml){
+      this._mailingTextBackup=this.mailingForm.body||'';
+      this.mailingForm.body=this._mailingWrap(this.mailingForm.template,this._mailingTextToHtml(this._mailingTextBackup));
+      this.mailingForm.isHtml=true;
+    }else{
+      this.mailingForm.body=this._mailingTextBackup;
+      this.mailingForm.isHtml=false;
+    }
+  },
+  insertMailingVar(v){
+    const ta=this.$refs.mailingBody;
+    if(!ta)return;
+    const s=ta.selectionStart,e=ta.selectionEnd;
+    this.mailingForm.body=this.mailingForm.body.substring(0,s)+v+this.mailingForm.body.substring(e);
+    this.$nextTick(()=>{ta.focus();ta.selectionStart=ta.selectionEnd=s+v.length;});
+  },
+  get mailingPreviewHtml(){
+    const body=this.mailingForm.body||'';
+    if(this.mailingForm.isHtml)return this._mailingSubstVars(body);
+    return this._mailingWrap(this.mailingForm.template,this._mailingTextToHtml(this._mailingSubstVars(body)));
+  },
+  async saveMailing(){
+    if(!this.mailingForm.subject||!this.mailingForm.body){this.mailingError='Заполните тему и текст';return;}
+    this.mailingError='';this.mailingSaving=true;
+    try{
+      const payload={...this.mailingForm,template:this.mailingForm.isHtml?'html':this.mailingForm.template};
+      const d=await(await fetch('/admin/api.php?action=saveMailing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json();
+      if(d.error){this.mailingError=d.error;return;}
+      this.mailingModal=false;
+      await this.loadMailings();
+    }finally{this.mailingSaving=false;}
+  },
+  async deleteMailing(ml){
+    if(!confirm(`Удалить рассылку «${ml.subject}»?`))return;
+    await fetch('/admin/api.php?action=deleteMailing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:ml.id})});
+    this.mailings=this.mailings.filter(x=>x.id!==ml.id);
   },
 
   _initHeadCm(){

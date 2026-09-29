@@ -966,6 +966,14 @@ document.querySelectorAll('.timer-widget[data-date]').forEach(function(el){
       <!-- pricing -->
       <template x-if="typeName(form.block_type_id) === 'pricing'">
         <div class="space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-400">Валюта:</span>
+            <template x-for="sym in ['₽','$','€','£','¥','₸']" :key="sym">
+              <button type="button" @click="opts.currency=sym"
+                :class="(opts.currency||'₽')===sym ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500'"
+                class="border rounded-lg px-2.5 py-1 text-sm font-medium transition-colors" x-text="sym"></button>
+            </template>
+          </div>
           <template x-for="(item, idx) in (opts.fields||[])" :key="idx">
             <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
               <div class="flex-1 grid grid-cols-[1fr_100px] gap-2">
@@ -1175,7 +1183,7 @@ function previewApp(){return{
     }else if(name==='music'){
       this.opts={items:[{type:'file',value:'',title:''}]};
     }else if(name==='pricing'){
-      this.opts={fields:[{title:'',price:0}]};
+      this.opts={fields:[{title:'',price:0}],currency:'₽'};
     }else if(name==='collapse'){
       this.opts={fields:[{title:'',text:'',opened:false}]};
     }else if(name==='plans'){

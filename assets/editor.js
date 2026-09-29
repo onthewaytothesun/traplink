@@ -146,7 +146,7 @@ const PLACEHOLDERS={
   socialnetworks:'{"items":[{"type":"instagram","link":"https://instagram.com/example/"}],"socials_style":{"layout":"full"}}',
   collapse:'{"fields":[{"title":"Вопрос?","text":"Ответ","opened":false}]}',
   media:'{"fields":[{"title":"Заголовок","text":"Текст","thumb":{}}]}',
-  pricing:'{"fields":[{"title":"Товар","price":1000}]}',
+  pricing:'{"fields":[{"title":"Товар","price":1000}],"currency":"₽"}',
   music:'{"items":[{"type":"spotify","value":"https://..."}]}',
   plans:'{"fields":[{"title":"Базовый","price":999}]}',
   form:'{"fields":[{"type_id":3,"title":"Имя","required":false,"idx":1},{"type_id":6,"title":"Email","required":true,"idx":2}],"form_btn":"Отправить","form_type":"text"}',

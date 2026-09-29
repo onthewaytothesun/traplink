@@ -1,4 +1,5 @@
 <?php
+file_put_contents(__DIR__ . '/mail-debug.log', date('Y-m-d H:i:s') . " submit.php HIT\n", FILE_APPEND);
 header('Content-Type: application/json; charset=utf-8');
 
 $cfg = require __DIR__ . '/config.php';
@@ -55,6 +56,84 @@ foreach ($fields as $field) {
 
 $pdo->prepare("INSERT INTO `tap_submissions` (`block_id`,`page_id`,`data`) VALUES (?,?,?)")
     ->execute([$blockId, $pageId ?: null, json_encode($data, JSON_UNESCAPED_UNICODE)]);
+
+// ── Send mailing on form submit ──────────────────────────────────────────
+$_ml_log = function($msg) { file_put_contents(__DIR__ . '/mail-debug.log', date('Y-m-d H:i:s') . ' ' . $msg . "\n", FILE_APPEND); };
+$formMailings = $opts['mailings'] ?? [];
+$_ml_log('mailings in opts: ' . json_encode($formMailings));
+$submitMailings = array_filter($formMailings, fn($m) => !empty($m['on_submit']));
+$_ml_log('submit mailings: ' . count($submitMailings));
+if ($submitMailings) {
+    // Find recipient email from submitted data
+    $recipientEmail = '';
+    $recipientName  = '';
+    foreach ($fields as $field) {
+        $tid = (int)($field['type_id'] ?? 3);
+        $val = trim($body['field_' . ($field['idx'] ?? 0)] ?? '');
+        if ($tid === 6 && filter_var($val, FILTER_VALIDATE_EMAIL)) $recipientEmail = $val;
+        if (($tid === 1 || $tid === 2) && $val !== '') $recipientName = $val;
+        if ($tid === 3 && stripos($field['title'] ?? '', 'имя') !== false && $val !== '' && !$recipientName) $recipientName = $val;
+    }
+    $_ml_log("recipient=$recipientEmail name=$recipientName");
+    if ($recipientEmail) {
+        // Load email module settings
+        try {
+            $emailCfg = $pdo->prepare("SELECT `setting_value` FROM `tap_settings` WHERE `setting_key`='module_email'");
+            $emailCfg->execute();
+            $emailSettings = json_decode($emailCfg->fetchColumn() ?: '{}', true);
+        } catch (PDOException $e) { $emailSettings = []; }
+
+        if (!empty($emailSettings['domain']) && !empty($emailSettings['password'])) {
+            $smtpUser = $emailSettings['domain'];
+            $smtpPass = $emailSettings['password'];
+            $smtpHost = ($emailSettings['provider'] ?? 'mail') === 'yandex' ? 'smtp.yandex.ru' : 'smtp.mail.ru';
+            $sender   = $emailSettings['sender'] ?: $smtpUser;
+
+            // Load and send each mailing
+            $mailingIds = array_column($submitMailings, 'id');
+            $inPlc = implode(',', array_fill(0, count($mailingIds), '?'));
+            $mlStmt = $pdo->prepare("SELECT `subject`,`body`,`template` FROM `tap_mailings` WHERE `id` IN ($inPlc)");
+            $mlStmt->execute($mailingIds);
+            $mlRows = $mlStmt->fetchAll();
+
+            // Find product info for variables
+            $productTitle = '';
+            $productPrice = '';
+            $productId = $opts['product_id'] ?? '';
+            if ($productId) {
+                $prStmt = $pdo->prepare("SELECT `title`,`price`,`currency` FROM `tap_products` WHERE `id`=? LIMIT 1");
+                $prStmt->execute([$productId]);
+                $pr = $prStmt->fetch();
+                if ($pr) {
+                    $productTitle = $pr['title'];
+                    $productPrice = number_format($pr['price'] / 100, 0, '', ' ') . ' ' . ($pr['currency'] ?: '₽');
+                }
+            }
+
+            foreach ($mlRows as $ml) {
+                $subj = $ml['subject'];
+                $bodyTpl = $ml['body'];
+                $vars = ['{{name}}' => $recipientName ?: 'Клиент', '{{product}}' => $productTitle ?: '—', '{{price}}' => $productPrice ?: '—'];
+                $subj = str_replace(array_keys($vars), array_values($vars), $subj);
+                $bodyTpl = str_replace(array_keys($vars), array_values($vars), $bodyTpl);
+
+                // Build email body
+                $isHtml = ($ml['template'] === 'html');
+                if ($isHtml) {
+                    $emailBody = $bodyTpl;
+                } else {
+                    $textHtml = nl2br(htmlspecialchars($bodyTpl));
+                    $emailBody = "<html><body style=\"font-family:Arial,sans-serif;color:#333;line-height:1.6\">$textHtml</body></html>";
+                }
+
+                // Send via SMTP with fsockopen
+                $_ml_log("SENDING to=$recipientEmail subj=$subj sender=$sender smtp=$smtpHost");
+                $mailResult = _sendSmtp($smtpHost, 465, $smtpUser, $smtpPass, $sender, $recipientEmail, $subj, $emailBody);
+                $_ml_log("RESULT: " . ($mailResult ? 'OK' : 'FAIL'));
+            }
+        }
+    }
+}
 
 // If form has a linked product, create a payment order
 $productId = preg_replace('/[^a-z0-9\-]/', '', $opts['product_id'] ?? '');
@@ -152,3 +231,48 @@ if ($productId) {
 }
 
 echo json_encode(['ok' => true]);
+
+// ── SMTP sender ──────────────────────────────────────────────────────────
+function _sendSmtp(string $host, int $port, string $user, string $pass, string $from, string $to, string $subject, string $htmlBody): bool {
+    $log = function($msg) { file_put_contents(__DIR__ . '/mail-debug.log', date('H:i:s') . " SMTP: $msg\n", FILE_APPEND); };
+    $ctx = stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+    $sock = @stream_socket_client("ssl://$host:$port", $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$sock) { $log("CONNECT FAIL: $errstr"); return false; }
+
+    $read = function() use ($sock, $log) { $r = fgets($sock, 4096); $log("< " . trim($r)); return $r; };
+    $write = function(string $cmd) use ($sock, $log) { $safe = strpos($cmd, 'AUTH') !== false || strlen($cmd) > 100 ? substr($cmd, 0, 30) . '...' : $cmd; $log("> $safe"); fwrite($sock, $cmd . "\r\n"); };
+
+    $read(); // greeting
+    $write("EHLO localhost"); $read();
+    while (strpos($line = $read(), '250-') === 0) {}
+
+    $authPlain = base64_encode("\0$user\0$pass");
+    $write("AUTH PLAIN $authPlain"); $resp = $read();
+    if (strpos($resp, '235') === false) {
+        $log("AUTH PLAIN failed, trying LOGIN");
+        $write("AUTH LOGIN"); $read();
+        $write(base64_encode($user)); $read();
+        $write(base64_encode($pass)); $resp = $read();
+        if (strpos($resp, '235') === false) { $log("AUTH LOGIN FAIL too"); fclose($sock); return false; }
+    }
+
+    $write("MAIL FROM:<$from>"); $read();
+    $write("RCPT TO:<$to>"); $read();
+    $write("DATA"); $read();
+
+    $boundary = md5(uniqid());
+    $headers  = "From: $from\r\n";
+    $headers .= "To: $to\r\n";
+    $headers .= "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+    $headers .= "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "Content-Transfer-Encoding: base64\r\n";
+    $headers .= "\r\n";
+    $headers .= chunk_split(base64_encode($htmlBody));
+    $headers .= "\r\n.";
+
+    $write($headers); $read();
+    $write("QUIT");
+    fclose($sock);
+    return true;
+}

@@ -29,7 +29,7 @@ $make('services','Услуги специалиста','Предложение, 
     [15,'banner',['picture'=>'/uploads/tpl-services-hero.jpg','link'=>'']],
     $space(28),$text('ВАШЕ ДЕЛО — МОЯ ЭКСПЕРТИЗА','sm','center'),$text('Освободите время\nдля главного','h1','center'),$text('Расскажите, какую задачу клиента вы решаете и какой результат он получит.','lg','center'),$link('Обсудить задачу'),$space(),
     [15,'banner',['picture'=>'/uploads/tpl-services-deco.jpg','link'=>'']],$space(),
-    $text('Форматы работы','h2'),[21,'pricing',['fields'=>[['title'=>'Знакомство и диагностика','price'=>1500],['title'=>'Индивидуальная консультация','price'=>5000],['title'=>'Сопровождение проекта','price'=>25000]]]],$space(),
+    $text('Форматы работы','h2'),[21,'pricing',['fields'=>[['title'=>'Знакомство и диагностика','price'=>1500],['title'=>'Индивидуальная консультация','price'=>5000],['title'=>'Сопровождение проекта','price'=>25000]],'currency'=>'₽']],$space(),
     $text('Вопросы и ответы','h2'),[14,'collapse',['fields'=>[['title'=>'Как начать работу?','text'=>'Оставьте заявку ниже. Мы свяжемся с вами и уточним детали.'],['title'=>'Можно ли работать онлайн?','text'=>'Да, встречи проходят в удобном для вас формате.']]]],
     [1,'text',['text'=>'Расскажите о вашей задаче','text_size'=>'h2'],'contact'],[10,'form',['fields'=>[['idx'=>0,'type_id'=>3,'title'=>'Ваше имя','required'=>true],['idx'=>1,'type_id'=>6,'title'=>'Email','required'=>true]],'form_btn'=>'Оставить заявку']],$space(28),
 ]);
@@ -47,5 +47,35 @@ $make('portfolio','Портфолио','Представление, избран
     $text('Избранные проекты','h2'),$text('01 / Название проекта','h3'),[15,'banner',['picture'=>'/uploads/tpl-portfolio-project1.jpg','link'=>'']],$text('Задача, ваша роль и результат. Замените этот текст описанием своего проекта.'),$link('Подробнее о проекте','#project-details'),$space(),
     [1,'text',['text'=>'02 / Следующая история','text_size'=>'h3'],'project-details'],[15,'banner',['picture'=>'/uploads/tpl-portfolio-project2.jpg','link'=>'']],$text('Добавьте изображения, контекст и детали процесса через редактор блоков.'),$space(32),
     [1,'text',['text'=>'Создадим что-то вместе','text_size'=>'h2'],'contact'],$link('Обсудить проект','mailto:design@example.com'),$space(36),
+]);
+// Compact link pages and a local business layout, with generated photography.
+$make('multilink','Простая мультиссылка','Аватар, короткое описание и все важные ссылки на одном экране.', ['screen'=>'#faf7f2','text_color'=>'#39362f','link_bg'=>'#39362f','link_radius'=>24], [
+    $space(28),[8,'avatar',['picture'=>'/uploads/tpl-multilink-generated.jpg']],
+    $text('Ваше имя','h2','center'),$text('Делаю любимое дело и делюсь полезным.\nВсе мои ссылки — здесь.','md','center'),$space(12),
+    [2,'link',['title'=>'Мой сайт','value'=>'https://example.com','icon'=>'globe']],
+    [2,'link',['title'=>'Telegram','subtitle'=>'Мысли, новости и закулисье','value'=>'https://example.com/telegram','icon'=>'telegram']],
+    [2,'link',['title'=>'Мои проекты','value'=>'https://example.com/projects','icon'=>'layers']],
+    [2,'link',['title'=>'Написать мне','value'=>'mailto:hello@example.com','icon'=>'email']],
+    $space(20),$text('Рада знакомству ♡','sm','center'),$space(24),
+]);
+$make('creator','Автор и соцсети','Обложка, свежий материал, каналы и контакты для сотрудничества.', ['screen'=>'#fff4ed','text_color'=>'#3d302c','link_bg'=>'#a44c32','link_radius'=>14], [
+    [15,'banner',['picture'=>'/uploads/tpl-creator-generated.jpg','link'=>'']],
+    $space(24),$text('ПРИВЕТ, Я САША','sm','center'),$text('Создаю. Рассказываю.\nВдохновляю.','h2','center'),$text('Про творчество, маленькие открытия и жизнь за кадром.','md','center'),$space(20),
+    [2,'link',['title'=>'Свежий выпуск','subtitle'=>'С чего начать свой творческий проект','value'=>'https://example.com/latest','icon'=>'youtube']],
+    [2,'link',['title'=>'Мой Telegram','subtitle'=>'То, что не вошло в видео','value'=>'https://example.com/telegram','icon'=>'telegram']],
+    [2,'link',['title'=>'Полезные материалы','subtitle'=>'Подборки, заметки и чек-листы','value'=>'https://example.com/resources','icon'=>'book']],
+    $space(24),$text('Давайте создавать вместе','h3','center'),$text('Открыта к интересным проектам и сотрудничеству.','md','center'),
+    [2,'link',['title'=>'Предложить сотрудничество','value'=>'mailto:collab@example.com','icon'=>'email']],$space(24),
+]);
+$make('cafe','Кофейня','Фото, меню, часы работы и контакты маленького любимого места.', ['screen'=>'#f7f3ea','text_color'=>'#233a31','link_bg'=>'#285745','link_radius'=>10], [
+    [15,'banner',['picture'=>'/uploads/tpl-cafe-generated.jpg','link'=>'']],
+    $space(28),$text('КОФЕЙНЯ У ДОМА','sm','center'),$text('Тёплое место','h1','center'),$text('Хороший кофе, свежая выпечка\nи время для себя.','lg','center'),$space(16),
+    $link('Посмотреть меню','#menu'),$link('Как нас найти','#visit'),$space(28),
+    [1,'text',['text'=>'Ваш любимый заказ','text_size'=>'h2'],'menu'],
+    [21,'pricing',['fields'=>[['title'=>'Эспрессо','price'=>180],['title'=>'Капучино','price'=>260],['title'=>'Флэт уайт','price'=>290],['title'=>'Матча-латте','price'=>320],['title'=>'Круассан','price'=>240]],'currency'=>'₽']],$space(28),
+    [1,'text',['text'=>'Заглядывайте в гости','text_size'=>'h2'],'visit'],
+    $text('Ваш город, улица и номер дома\nПн–Пт: 08:00–21:00 · Сб–Вс: 09:00–21:00'),
+    [2,'link',['title'=>'Забронировать столик','value'=>'mailto:cafe@example.com','icon'=>'email']],
+    $space(20),$text('Здесь всегда рады вам.','sm','center'),$space(28),
 ]);
 return $presets;

@@ -138,6 +138,16 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `tap_products` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS `tap_mailings` (
+    `id` varchar(64) NOT NULL,
+    `subject` varchar(500) NOT NULL DEFAULT '',
+    `body` longtext,
+    `template` varchar(32) NOT NULL DEFAULT 'plain',
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
 $action = $_GET['action'] ?? '';
 $body   = $_SERVER['REQUEST_METHOD'] === 'POST'
     ? (json_decode(file_get_contents('php://input'), true) ?? [])
@@ -441,6 +451,28 @@ switch ($action) {
         echo json_encode(['ok' => true]);
         break;
 
+    // ── Modules ───────────────────────────────────────────────────────────
+
+    case 'getModuleSettings':
+        $key = 'module_' . preg_replace('/[^a-z0-9_]/', '', $body['module'] ?? $_GET['module'] ?? '');
+        try {
+            $val = $pdo->prepare("SELECT `setting_value` FROM `tap_settings` WHERE `setting_key`=?");
+            $val->execute([$key]);
+            $raw = $val->fetchColumn();
+        } catch (PDOException $e) { $raw = false; }
+        echo json_encode(['settings' => $raw ? json_decode($raw, true) : null]);
+        break;
+
+    case 'saveModuleSettings':
+        $module = preg_replace('/[^a-z0-9_]/', '', $body['module'] ?? '');
+        if (!$module) { echo json_encode(['error' => 'module required']); break; }
+        $key = 'module_' . $module;
+        $val = json_encode($body['settings'] ?? [], JSON_UNESCAPED_UNICODE);
+        $stmt = $pdo->prepare("INSERT INTO `tap_settings` (`setting_key`,`setting_value`) VALUES (?,?) ON DUPLICATE KEY UPDATE `setting_value`=VALUES(`setting_value`)");
+        $stmt->execute([$key, $val]);
+        echo json_encode(['ok' => true]);
+        break;
+
     // ── Payments ────────────────────────────────────────────────────────────
 
     case 'payments':
@@ -638,6 +670,38 @@ switch ($action) {
     case 'deleteProduct': {
         $id = trim($body['id'] ?? '');
         if ($id) $pdo->prepare("DELETE FROM `tap_products` WHERE `id`=?")->execute([$id]);
+        echo json_encode(['ok' => true]);
+        break;
+    }
+
+    // ── Mailings ───────────────────────────────────────────────────────────
+
+    case 'mailings':
+        $rows = $pdo->query("SELECT `id`,`subject`,`body`,`template`,`created_at`,`updated_at` FROM `tap_mailings` ORDER BY `created_at` DESC")->fetchAll();
+        echo json_encode(['mailings' => $rows]);
+        break;
+
+    case 'saveMailing': {
+        $id       = trim($body['id'] ?? '');
+        $subject  = substr(trim($body['subject'] ?? ''), 0, 500);
+        $bodyText = $body['body'] ?? '';
+        $template = preg_replace('/[^a-z0-9_]/', '', $body['template'] ?? 'plain');
+        if (!$subject) { echo json_encode(['error' => 'subject required']); break; }
+        if (!$id) {
+            $id = 'm-' . bin2hex(random_bytes(8));
+            $pdo->prepare("INSERT INTO `tap_mailings` (`id`,`subject`,`body`,`template`) VALUES (?,?,?,?)")
+                ->execute([$id, $subject, $bodyText, $template]);
+        } else {
+            $pdo->prepare("UPDATE `tap_mailings` SET `subject`=?,`body`=?,`template`=? WHERE `id`=?")
+                ->execute([$subject, $bodyText, $template, $id]);
+        }
+        echo json_encode(['ok' => true, 'id' => $id]);
+        break;
+    }
+
+    case 'deleteMailing': {
+        $id = trim($body['id'] ?? '');
+        if ($id) $pdo->prepare("DELETE FROM `tap_mailings` WHERE `id`=?")->execute([$id]);
         echo json_encode(['ok' => true]);
         break;
     }

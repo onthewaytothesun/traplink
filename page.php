@@ -574,11 +574,12 @@ HTML;
         case 'pricing':
             $fields = $opts['fields'] ?? [];
             if (!$fields) return '';
+            $cur = htmlspecialchars($opts['currency'] ?? '₽');
             $out = '';
             foreach ($fields as $f) {
                 $t = htmlspecialchars($f['title'] ?? '');
                 $p = htmlspecialchars((string)($f['price'] ?? ''));
-                $out .= "<div class=\"pricing-item\"><span>$t</span><span class=\"price\">$p</span></div>\n";
+                $out .= "<div class=\"pricing-item\"><span>$t</span><span class=\"price\">$p $cur</span></div>\n";
             }
             return $out;
 
@@ -611,8 +612,8 @@ HTML;
             $blockId = htmlspecialchars($opts['_block_id'] ?? '');
             $pageId  = htmlspecialchars($opts['_page_id']  ?? '');
             if (!$fields || !$blockId) return '';
-            $inputTypeMap = [3 => 'text', 5 => 'tel', 6 => 'email', 9 => 'date', 12 => 'number', 13 => 'time'];
-            $phMap        = [3 => 'Имя', 5 => '+7 (___) ___-__-__', 6 => 'email@example.com'];
+            $inputTypeMap = [1 => 'text', 2 => 'text', 3 => 'text', 5 => 'tel', 6 => 'email', 9 => 'date', 12 => 'number', 13 => 'time'];
+            $phMap        = [1 => 'Имя', 2 => 'Фамилия Имя Отчество', 3 => 'Введите текст', 5 => '+7 (___) ___-__-__', 6 => 'email@example.com'];
             $countries    = ['Россия','Украина','Беларусь','Казахстан','Узбекистан','Азербайджан','Армения','Грузия','Кыргызстан','Молдова','Таджикистан','Туркменистан','Латвия','Литва','Эстония','Германия','Франция','Великобритания','США','Канада','Австралия','Турция','Китай','Япония','Южная Корея','Индия','Бразилия','Аргентина','Мексика','ОАЭ','Израиль','Италия','Испания','Польша','Чехия','Нидерланды','Швеция','Норвегия','Финляндия','Швейцария','Австрия','Португалия','Другая'];
             $productId = htmlspecialchars($opts['product_id'] ?? '');
             $out  = "<form class=\"block-form has-form-normal\">\n";
