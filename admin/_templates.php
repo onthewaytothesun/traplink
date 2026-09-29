@@ -4,9 +4,11 @@
     <p class="tpl-help">Чтобы добавить свой шаблон, откройте страницу<br>и нажмите «Сохранить как шаблон».</p>
   </div>
   <div class="tpl-tools">
-    <div class="tpl-tabs" role="group" aria-label="Тип шаблонов">
+    <div class="tpl-tabs" role="group" aria-label="Категория шаблонов">
       <button type="button" @click="filter='all'" :aria-pressed="filter==='all'">Все</button>
-      <button type="button" @click="filter='builtin'" :aria-pressed="filter==='builtin'">Предустановленные</button>
+      <template x-for="c in usedCategories" :key="c.id">
+        <button type="button" @click="filter=c.id" :aria-pressed="filter===c.id" x-text="c.title"></button>
+      </template>
       <button type="button" @click="filter='custom'" :aria-pressed="filter==='custom'">Мои шаблоны</button>
     </div>
     <input class="tpl-search" type="search" x-model="search" placeholder="Найти шаблон" aria-label="Найти шаблон">
@@ -25,7 +27,7 @@
           <span class="tpl-preview-label">Предпросмотр ↗</span>
         </button>
         <div class="tpl-card-content">
-          <div class="tpl-card-meta"><span x-text="t.kind==='builtin'?'Предустановленный':'Мой шаблон'"></span><span x-text="t.block_count+' блоков'"></span></div>
+          <div class="tpl-card-meta"><span x-text="(t.kind==='custom'?'Мой шаблон':'')+(t.kind==='custom'&&t.category?' · ':'')+categoryTitle(t.category)"></span><span x-text="t.block_count+' блоков'"></span></div>
           <h2 x-text="t.title"></h2><p class="tpl-description" x-text="t.description || 'Сохранённая структура и оформление страницы.'"></p>
           <div class="tpl-card-actions">
             <button type="button" class="tpl-primary" @click="create(t)" :disabled="!!busy" x-text="busy===t.id?'Подождите…':'Создать'"></button>

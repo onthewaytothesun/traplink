@@ -2,6 +2,23 @@
 require_once __DIR__ . '/page-design.php';
 
 final class PageTemplateService {
+    // Display order of the category filter; empty categories are hidden in the admin.
+    public const CATEGORIES = [
+        'links'=>'Мультиссылка',
+        'personal'=>'Личный бренд',
+        'media'=>'Блогеры и медиа',
+        'services'=>'Эксперты и услуги',
+        'education'=>'Обучение',
+        'portfolio'=>'Портфолио',
+        'business'=>'Бизнес и заведения',
+        'beauty'=>'Красота и здоровье',
+        'shop'=>'Магазин и товары',
+        'events'=>'Мероприятия',
+        'music'=>'Музыка и творчество',
+        'realty'=>'Недвижимость и авто',
+        'nonprofit'=>'Некоммерческие',
+    ];
+
     private PDO $db;
     private array $presets;
 
@@ -20,6 +37,17 @@ final class PageTemplateService {
             snapshot LONGTEXT NOT NULL,
             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )" . $suffix);
+        try {
+            $this->db->query('SELECT category FROM tap_templates LIMIT 0');
+        } catch (PDOException $e) {
+            $this->db->exec("ALTER TABLE tap_templates ADD COLUMN category varchar(32) NOT NULL DEFAULT ''");
+        }
+    }
+
+    public function categories(): array {
+        $result = [];
+        foreach (self::CATEGORIES as $id=>$title) $result[] = ['id'=>$id, 'title'=>$title];
+        return $result;
     }
 
     private function query(string $sql, array $args = []): PDOStatement {
@@ -42,6 +70,7 @@ final class PageTemplateService {
         return [
             'id'=>$template['id'], 'title'=>$template['title'],
             'description'=>$template['description'], 'kind'=>$template['kind'],
+            'category'=>isset(self::CATEGORIES[$template['category'] ?? '']) ? $template['category'] : '',
             'block_count'=>count($snapshot['blocks']), 'section_count'=>count($snapshot['sections']),
         ];
     }
@@ -67,11 +96,12 @@ final class PageTemplateService {
         return $row;
     }
 
-    public function save(string $pageId, string $title, string $description): array {
+    public function save(string $pageId, string $title, string $description, string $category = ''): array {
         $title = trim($title);
         if ($title === '' || mb_strlen($title) > 255 || mb_strlen($description) > 1000) {
             throw new InvalidArgumentException('Укажите название до 255 символов и описание до 1000 символов.');
         }
+        if ($category !== '' && !isset(self::CATEGORIES[$category])) throw new InvalidArgumentException('Неизвестная категория шаблона.');
         $this->db->beginTransaction();
         try {
             $page = $this->query('SELECT * FROM tap_pages WHERE id=?', [$pageId])->fetch(PDO::FETCH_ASSOC);
@@ -91,9 +121,9 @@ final class PageTemplateService {
             foreach ($snapshot['blocks'] as &$block) $block['options'] = $this->decode($block['options']);
             unset($block);
             $id = 'tpl-' . bin2hex(random_bytes(12));
-            $this->query('INSERT INTO tap_templates (id,title,description,snapshot) VALUES (?,?,?,?)', [$id,$title,trim($description),$this->json($snapshot)]);
+            $this->query('INSERT INTO tap_templates (id,title,description,category,snapshot) VALUES (?,?,?,?,?)', [$id,$title,trim($description),$category,$this->json($snapshot)]);
             $this->db->commit();
-            return $this->metadata(['id'=>$id,'title'=>$title,'description'=>trim($description),'kind'=>'custom','snapshot'=>$snapshot]);
+            return $this->metadata(['id'=>$id,'title'=>$title,'description'=>trim($description),'category'=>$category,'kind'=>'custom','snapshot'=>$snapshot]);
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
             throw $e;

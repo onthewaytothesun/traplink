@@ -45,7 +45,7 @@ let server,browser;
  await page.screenshot({path:'/tmp/traplink-templates-desktop.png',fullPage:true});
  await page.getByRole('button',{name:'Мои шаблоны',exact:true}).click();page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Удалить шаблон Клиентский шаблон'}).click();await page.locator('.tpl-empty:visible').waitFor();
  assert.equal((await (await page.request.get(base+'/admin/api.php?action=fixturePages')).json()).length,after.length);
- await page.getByRole('button',{name:'Предустановленные',exact:true}).click();await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/tmp/traplink-templates-mobile.png',fullPage:true});
+ await page.getByRole('button',{name:'Мультиссылка',exact:true}).click();await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/tmp/traplink-templates-mobile.png',fullPage:true});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no mobile horizontal overflow');
  assert.deepEqual(errors,[]);assert.ok(!serverErrors.includes('Fatal error'),serverErrors);
  console.log('PASS browser: catalog, preview isolation, filters, search, save snapshot, lost-response retry without duplicates, redirect, delete preserving pages, mobile layout');

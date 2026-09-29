@@ -6,6 +6,7 @@
         <p>Сохраним текущую сохранённую версию страницы: блоки, секции и оформление. Сначала сохраните изменения в редакторе.</p>
         <label>Название<input x-ref="templateTitle" type="text" x-model="title" maxlength="255" required :disabled="saving"></label>
         <label>Описание<textarea x-model="description" rows="3" maxlength="1000" placeholder="Для чего подойдёт этот шаблон" :disabled="saving"></textarea></label>
+        <label>Категория<select x-model="category" :disabled="saving"><option value="">Без категории</option><template x-for="c in categories" :key="c.id"><option :value="c.id" x-text="c.title"></option></template></select></label>
         <p class="tpl-error" role="alert" x-show="error" x-text="error"></p>
         <footer><button type="button" @click="close()" :disabled="saving">Отмена</button><button type="submit" class="tpl-primary" :disabled="saving" x-text="saving?'Сохраняем…':'Сохранить шаблон'"></button></footer>
       </form>

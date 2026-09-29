@@ -58,3 +58,14 @@ foreach ($presets as $preset) {
  verify(count($pictures)>0,'template includes imagery: '.$preset['id']);
  foreach($pictures as $picture) verify(is_file(dirname(__DIR__).$picture)&&getimagesize(dirname(__DIR__).$picture)!==false,'image exists and decodes: '.$picture);
 }
+
+$listed=$service->list();
+foreach(array_filter($listed,fn($t)=>$t['kind']==='builtin') as $t) verify(isset(PageTemplateService::CATEGORIES[$t['category']]),'preset has known category: '.$t['id']);
+$cat=$service->save($page['id'],'С категорией','','business');verify($cat['category']==='business','custom template stores category');
+verify(count(array_filter($service->list(),fn($t)=>$t['id']===$cat['id']&&$t['category']==='business'))===1,'category survives listing');
+try{$service->save($page['id'],'Плохая','','nope');throw new Exception('Unknown category accepted');}catch(InvalidArgumentException $e){echo "PASS unknown category rejected\n";}
+$db3=new PDO('sqlite::memory:');$db3->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+$db3->exec("CREATE TABLE tap_templates (id TEXT PRIMARY KEY,title TEXT NOT NULL,description TEXT NOT NULL,snapshot TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+$db3->exec("INSERT INTO tap_templates (id,title,description,snapshot) VALUES ('tpl-old','Old','','{\"blocks\":[],\"sections\":[]}')");
+$s3=new PageTemplateService($db3);$s3->ensureSchema();$s3->ensureSchema();
+verify(count(array_filter($s3->list(),fn($t)=>$t['id']==='tpl-old'&&$t['category']===''))===1,'existing table migrated with empty category');

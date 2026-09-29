@@ -15,9 +15,9 @@ try {
     $service = new PageTemplateService($pdo);
     $service->ensureSchema();
     if ($action === 'templates') {
-        $result = ['templates'=>$service->list()];
+        $result = ['templates'=>$service->list(), 'categories'=>$service->categories()];
     } elseif ($action === 'savePageTemplate') {
-        $result = ['ok'=>true, 'template'=>$service->save((string)($body['page_id']??''),(string)($body['title']??''),(string)($body['description']??''))];
+        $result = ['ok'=>true, 'template'=>$service->save((string)($body['page_id']??''),(string)($body['title']??''),(string)($body['description']??''),(string)($body['category']??''))];
     } elseif ($action === 'createFromTemplate') {
         $result = ['ok'=>true,'page'=>$service->create((string)($body['template_id']??''),(string)($body['request_id']??''))];
     } elseif ($action === 'savePageDesign') {

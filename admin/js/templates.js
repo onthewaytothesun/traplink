@@ -20,17 +20,26 @@
   }
   document.addEventListener('alpine:init', () => {
     Alpine.data('pageTemplates', () => ({
-      templates: [], loading: false, error: '', filter: 'all', search: '', busy: '', preview: null,
+      templates: [], categories: [], loading: false, error: '', filter: 'all', search: '', busy: '', preview: null,
       init() { this.load(); },
+      get usedCategories() {
+        return this.categories.filter(c => this.templates.some(t => t.category === c.id));
+      },
+      categoryTitle(id) { return this.categories.find(c => c.id === id)?.title || ''; },
       get filtered() {
         const q = this.search.trim().toLowerCase();
-        return this.templates.filter(t => (this.filter === 'all' || t.kind === this.filter) &&
+        const f = this.filter;
+        return this.templates.filter(t => (f === 'all' || (f === 'custom' ? t.kind === 'custom' : t.category === f)) &&
           (!q || (t.title + ' ' + t.description).toLowerCase().includes(q)));
       },
       async load() {
         if (this.loading) return;
         this.loading = true; this.error = '';
-        try { this.templates = (await api('templates')).templates; }
+        try {
+          const data = await api('templates');
+          this.templates = data.templates; this.categories = data.categories || [];
+          if (!['all', 'custom'].includes(this.filter) && !this.usedCategories.some(c => c.id === this.filter)) this.filter = 'all';
+        }
         catch (e) { this.error = e.message || 'Не удалось загрузить шаблоны.'; }
         finally { this.loading = false; }
       },
@@ -60,10 +69,11 @@
       }
     }));
     Alpine.data('templateSave', () => ({
-      open: false, page: null, title: '', description: '', saving: false, error: '', success: false,
+      open: false, page: null, title: '', description: '', category: '', categories: [], saving: false, error: '', success: false,
       show(page) {
         if (!page?.id || this.saving) return;
-        this.page = page; this.title = page.title; this.description = '';
+        this.page = page; this.title = page.title; this.description = ''; this.category = '';
+        if (!this.categories.length) api('templates').then(d => { this.categories = d.categories || []; }).catch(() => {});
         this.error = ''; this.success = false; this.open = true;
         this.$nextTick(() => this.$refs.templateTitle.focus());
       },
@@ -73,7 +83,7 @@
         if (!this.title.trim()) { this.error = 'Введите название шаблона.'; return; }
         this.saving = true; this.error = '';
         try {
-          await api('savePageTemplate', {page_id: this.page.id, title: this.title.trim(), description: this.description.trim()});
+          await api('savePageTemplate', {page_id: this.page.id, title: this.title.trim(), description: this.description.trim(), category: this.category});
           this.success = true;
           window.dispatchEvent(new CustomEvent('templates-changed'));
         } catch (e) { this.error = e.message || 'Не удалось сохранить шаблон.'; }
