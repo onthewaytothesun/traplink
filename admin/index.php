@@ -74,8 +74,8 @@ if (!$isAuth):
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1/Sortable.min.js"></script>
 <script src="/admin/js/sidebar.js"></script>
-<script src="/admin/js/templates.js?v=1"></script>
-<link rel="stylesheet" href="/assets/templates.css?v=1">
+<script src="/admin/js/templates.js?v=2"></script>
+<link rel="stylesheet" href="/assets/templates.css?v=2">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/material-darker.min.css">
@@ -100,6 +100,7 @@ if (!$isAuth):
   .hover\:text-white:hover{color:var(--adm-text)!important}.hover\:text-gray-200:hover{color:var(--adm-text)!important}
   .placeholder-gray-600::placeholder{color:var(--adm-subtle)!important}
   .bg-blue-600,.bg-blue-600.text-white{color:#fff!important}
+  .divide-gray-800>:not([hidden])~:not([hidden]){border-color:var(--adm-border)!important}
   .adm-note{background:var(--adm-raised);border:1px solid var(--adm-border);color:var(--adm-muted)}
   .adm-note a{color:#2563eb}[data-theme="dark"] .adm-note a{color:#60a5fa}
   .adm-warn{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
@@ -719,7 +720,7 @@ if (!$isAuth):
 
         <!-- Module: smtp.bz -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <button @click="modulesUI.smtpbzOpen=!modulesUI.smtpbzOpen;if(modulesUI.smtpbzOpen)loadModuleSmtpbz()"
+          <button @click="modulesUI.smtpbzOpen=!modulesUI.smtpbzOpen;if(modulesUI.smtpbzOpen){loadModuleSmtpbz();loadSmtpbzHooks()}"
             class="w-full flex items-center justify-between px-5 py-4 text-left transition-colors" style="opacity:.85" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.85'">
             <div>
               <div class="text-sm font-medium text-white">smtp.bz</div>
@@ -784,6 +785,51 @@ if (!$isAuth):
                   class="text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                   style="background:#1f6feb" onmouseover="this.style.background='#388bfd'" onmouseout="this.style.background='#1f6feb'"
                   x-text="modulesUI.smtpbzSaving?'Сохраняю…':'Сохранить'"></button>
+              </div>
+
+              <!-- HTTP notifications -->
+              <div class="border-t border-gray-800 pt-4 space-y-3">
+                <div>
+                  <div class="text-xs font-medium text-white">HTTP-уведомления</div>
+                  <p class="text-xs text-gray-500 mt-1">Скопируйте ссылки в соответствующие поля в <a href="https://smtp.bz/panel/user" target="_blank" rel="noopener" class="text-blue-500 hover:underline">smtp.bz/panel/user</a> — тогда статусы писем будут приходить сюда.</p>
+                </div>
+                <div x-show="smtpbzHooks.loading && !smtpbzHooks.hooks.length" class="text-xs text-gray-500">Загрузка…</div>
+                <div class="space-y-2">
+                  <template x-for="hook in smtpbzHooks.hooks" :key="hook.event">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <div class="text-xs text-gray-400 sm:w-24 shrink-0" x-text="hook.label"></div>
+                      <div class="flex gap-2 flex-1 min-w-0">
+                        <input :id="'smtpbz-hook-'+hook.event" type="text" readonly :value="hook.url" @focus="$event.target.select()"
+                          class="flex-1 min-w-0 bg-gray-800 border border-gray-700 text-gray-400 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-blue-500">
+                        <button type="button" @click="copySmtpbzHook(hook)"
+                          class="shrink-0 w-24 text-xs font-medium bg-gray-800 hover:bg-gray-700 border border-gray-700 px-2 py-1.5 rounded-lg transition-colors"
+                          :class="smtpbzHooks.copied===hook.event?'text-green-500':'text-gray-400'"
+                          x-text="smtpbzHooks.copied===hook.event?'Скопировано':'Копировать'"></button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Recent events -->
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <div class="text-xs text-gray-500">Последние события</div>
+                    <button type="button" @click="loadSmtpbzHooks()" class="text-xs text-blue-500 hover:underline" x-text="smtpbzHooks.loading?'Обновляю…':'Обновить'"></button>
+                  </div>
+                  <div x-show="!smtpbzHooks.events.length" class="text-xs text-gray-600">Пока ничего не приходило.</div>
+                  <div x-show="smtpbzHooks.events.length" class="border border-gray-800 rounded-lg divide-y divide-gray-800 max-h-64 overflow-y-auto sb">
+                    <template x-for="(ev,i) in smtpbzHooks.events" :key="i">
+                      <details class="px-3 py-2 text-xs">
+                        <summary class="flex items-center gap-2 cursor-pointer list-none">
+                          <span class="font-medium text-white shrink-0" x-text="smtpbzEventLabel(ev.event)"></span>
+                          <span class="text-gray-400 truncate flex-1 min-w-0" x-text="ev.email||ev.message_id||'—'"></span>
+                          <span class="text-gray-600 shrink-0" x-text="new Date(ev.created_at.replace(' ','T')).toLocaleString('ru')"></span>
+                        </summary>
+                        <pre class="mt-2 text-gray-500 whitespace-pre-wrap break-all font-mono" x-text="ev.payload"></pre>
+                      </details>
+                    </template>
+                  </div>
+                </div>
               </div>
 
               <!-- Test email -->
@@ -2266,6 +2312,7 @@ function app(){return{
     smtpbzOpen:false,smtpbzLoading:false,smtpbzSaving:false,smtpbzSaved:false,smtpbzShowKey:false,smtpbzLoaded:false,smtpbzError:''},
   moduleSmtpbz:{apiKey:'',sender:'',name:''},
   smtpbzTest:{to:'',sending:false,ok:false,error:''},
+  smtpbzHooks:{hooks:[],events:[],loading:false,copied:''},
   mailings:[],mailingsLoading:false,
   mailingModal:false,mailingSaving:false,mailingError:'',
   mailingForm:{id:'',subject:'',body:'',template:'plain',isHtml:false},_mailingTextBackup:'',
@@ -2795,6 +2842,22 @@ function app(){return{
     }catch(e){t.error='Ошибка сети';}
     t.sending=false;
   },
+  async loadSmtpbzHooks(){
+    const h=this.smtpbzHooks;
+    h.loading=true;
+    try{
+      const d=await(await fetch('/admin/api.php?action=smtpbzWebhooks')).json();
+      h.hooks=d.hooks||[];h.events=d.events||[];
+    }catch(e){}
+    h.loading=false;
+  },
+  async copySmtpbzHook(hook){
+    try{await navigator.clipboard.writeText(hook.url);}
+    catch(e){const el=document.getElementById('smtpbz-hook-'+hook.event);el.select();document.execCommand('copy');}
+    this.smtpbzHooks.copied=hook.event;
+    setTimeout(()=>{if(this.smtpbzHooks.copied===hook.event)this.smtpbzHooks.copied='';},1500);
+  },
+  smtpbzEventLabel(ev){return (this.smtpbzHooks.hooks.find(h=>h.event===ev)||{}).label||ev;},
   mailReady(){
     return !!((this.modulesUI.emailLoaded&&this.moduleEmail.domain)||(this.modulesUI.smtpbzLoaded&&this.moduleSmtpbz.apiKey&&this.moduleSmtpbz.sender));
   },

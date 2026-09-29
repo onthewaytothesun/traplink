@@ -490,6 +490,21 @@ switch ($action) {
         break;
     }
 
+    case 'smtpbzWebhooks': {
+        require_once dirname(__DIR__) . '/includes/smtpbz.php';
+        smtpbz_ensure_events_table($pdo);
+        $token  = smtpbz_webhook_token($pdo);
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $base   = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . '/smtpbz-hook.php';
+        $hooks  = [];
+        foreach (SMTPBZ_EVENTS as $event => $label) {
+            $hooks[] = ['event' => $event, 'label' => $label, 'url' => "$base?event=$event&token=$token"];
+        }
+        $events = $pdo->query("SELECT `event`,`email`,`message_id`,`payload`,`created_at` FROM `tap_smtpbz_events` ORDER BY `id` DESC LIMIT 20")->fetchAll();
+        echo json_encode(['hooks' => $hooks, 'events' => $events], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        break;
+    }
+
     // ── Payments ────────────────────────────────────────────────────────────
 
     case 'payments':
