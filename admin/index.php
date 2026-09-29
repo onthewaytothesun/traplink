@@ -100,6 +100,10 @@ if (!$isAuth):
   .hover\:text-white:hover{color:var(--adm-text)!important}.hover\:text-gray-200:hover{color:var(--adm-text)!important}
   .placeholder-gray-600::placeholder{color:var(--adm-subtle)!important}
   .bg-blue-600,.bg-blue-600.text-white{color:#fff!important}
+  .adm-note{background:var(--adm-raised);border:1px solid var(--adm-border);color:var(--adm-muted)}
+  .adm-note a{color:#2563eb}[data-theme="dark"] .adm-note a{color:#60a5fa}
+  .adm-warn{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+  [data-theme="dark"] .adm-warn{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:#fcd34d}
   /* ─────────────────────────────────────────────────────────────── */
   .sb::-webkit-scrollbar{width:3px}.sb::-webkit-scrollbar-track{background:transparent}.sb::-webkit-scrollbar-thumb{background:var(--adm-scroll);border-radius:2px}
   .CodeMirror{height:280px;font-size:13px;font-family:'JetBrains Mono','Fira Mono',monospace;border-radius:0.5rem;}
@@ -708,6 +712,93 @@ if (!$isAuth):
                   class="text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                   style="background:#1f6feb" onmouseover="this.style.background='#388bfd'" onmouseout="this.style.background='#1f6feb'"
                   x-text="modulesUI.emailSaving?'Сохраняю…':'Сохранить'"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Module: smtp.bz -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <button @click="modulesUI.smtpbzOpen=!modulesUI.smtpbzOpen;if(modulesUI.smtpbzOpen)loadModuleSmtpbz()"
+            class="w-full flex items-center justify-between px-5 py-4 text-left transition-colors" style="opacity:.85" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.85'">
+            <div>
+              <div class="text-sm font-medium text-white">smtp.bz</div>
+              <div class="text-xs text-gray-500 mt-0.5">До 15 000 писем в месяц бесплатно · рассылка с доменной почты</div>
+            </div>
+            <svg class="w-4 h-4 text-gray-500 transition-transform shrink-0 ml-3" :class="modulesUI.smtpbzOpen?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div x-show="modulesUI.smtpbzOpen" x-transition class="border-t border-gray-800 px-5 py-5 space-y-4">
+            <div x-show="modulesUI.smtpbzLoading" class="flex justify-center py-4">
+              <svg class="animate-spin w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            </div>
+            <div x-show="!modulesUI.smtpbzLoading" class="space-y-4">
+              <!-- Instructions -->
+              <ol class="adm-note text-xs leading-relaxed space-y-1.5 list-decimal list-inside rounded-lg px-4 py-3">
+                <li>Зарегистрируйтесь на <a href="https://smtp.bz" target="_blank" rel="noopener" class="font-medium hover:underline">smtp.bz</a></li>
+                <li>Перейдите в профиль: <a href="https://smtp.bz/panel/user" target="_blank" rel="noopener" class="font-medium hover:underline">smtp.bz/panel/user</a></li>
+                <li>В разделе «Доступ к API» нажмите «Создать ключ для API»</li>
+                <li>Скопируйте ключ и вставьте его в поле ниже</li>
+              </ol>
+
+              <!-- Domain warning -->
+              <div class="adm-warn flex gap-2.5 text-xs leading-relaxed rounded-lg px-4 py-3">
+                <svg class="w-4 h-4 shrink-0 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <p>Чтобы отправлять письма с корпоративной почты (например, info@вашдомен.ru), добавьте домен отправителя в <a href="https://smtp.bz/panel/domain" target="_blank" rel="noopener" class="font-medium underline">smtp.bz/panel/domain</a>.</p>
+              </div>
+
+              <!-- API key -->
+              <div>
+                <label class="block text-xs text-gray-500 mb-1.5">API-ключ</label>
+                <div class="relative">
+                  <input :type="modulesUI.smtpbzShowKey?'text':'password'" x-model="moduleSmtpbz.apiKey" placeholder="Вставьте API-ключ smtp.bz" autocomplete="off"
+                    class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+                  <button type="button" @click="modulesUI.smtpbzShowKey=!modulesUI.smtpbzShowKey"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-1">
+                    <svg x-show="!modulesUI.smtpbzShowKey" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <svg x-show="modulesUI.smtpbzShowKey" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Sender -->
+              <div>
+                <label class="block text-xs text-gray-500 mb-1.5">Адрес отправителя</label>
+                <input type="email" x-model="moduleSmtpbz.sender" placeholder="info@вашдомен.ru"
+                  class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+                <p class="text-xs text-gray-600 mt-1.5">Почта на домене, подтверждённом в smtp.bz.</p>
+              </div>
+
+              <!-- Sender name -->
+              <div>
+                <label class="block text-xs text-gray-500 mb-1.5">Имя отправителя <span class="text-gray-600">(необязательно)</span></label>
+                <input type="text" x-model="moduleSmtpbz.name" placeholder="Моя компания"
+                  class="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+              </div>
+
+              <!-- Save -->
+              <div class="flex items-center justify-between pt-2">
+                <p class="text-xs text-red-400" x-show="modulesUI.smtpbzError" x-text="modulesUI.smtpbzError"></p>
+                <p class="text-xs text-green-400" x-show="modulesUI.smtpbzSaved" x-transition>Сохранено</p>
+                <div></div>
+                <button @click="saveModuleSmtpbz()" :disabled="modulesUI.smtpbzSaving||!moduleSmtpbz.apiKey.trim()||!moduleSmtpbz.sender.trim()"
+                  class="text-sm font-medium text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  style="background:#1f6feb" onmouseover="this.style.background='#388bfd'" onmouseout="this.style.background='#1f6feb'"
+                  x-text="modulesUI.smtpbzSaving?'Сохраняю…':'Сохранить'"></button>
+              </div>
+
+              <!-- Test email -->
+              <div class="border-t border-gray-800 pt-4">
+                <label class="block text-xs text-gray-500 mb-1.5">Тестовое письмо</label>
+                <div class="flex gap-2">
+                  <input type="email" x-model="smtpbzTest.to" placeholder="куда отправить, например you@gmail.com" @keydown.enter="sendSmtpbzTest()"
+                    class="flex-1 min-w-0 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-600 transition-colors">
+                  <button @click="sendSmtpbzTest()" :disabled="smtpbzTest.sending||!smtpbzTest.to.trim()"
+                    class="shrink-0 text-sm font-medium text-gray-200 bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                    x-text="smtpbzTest.sending?'Отправляю…':'Отправить'"></button>
+                </div>
+                <p class="text-xs text-green-400 mt-1.5" x-show="smtpbzTest.ok">Письмо отправлено — проверьте почту (и папку «Спам»).</p>
+                <p class="text-xs text-red-400 mt-1.5" x-show="smtpbzTest.error" x-text="smtpbzTest.error"></p>
+                <p class="text-xs text-gray-600 mt-1.5">Отправляется с текущими значениями полей выше, даже если они ещё не сохранены.</p>
               </div>
             </div>
           </div>
@@ -1855,6 +1946,14 @@ if (!$isAuth):
       <!-- pricing -->
       <template x-if="typeName(form.block_type_id) === 'pricing'">
         <div class="space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-400">Валюта:</span>
+            <template x-for="sym in ['₽','$','€','£','¥','₸']" :key="sym">
+              <button type="button" @click="opts.currency=sym"
+                :class="(opts.currency||'₽')===sym ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500'"
+                class="border rounded-lg px-2.5 py-1 text-sm font-medium transition-colors" x-text="sym"></button>
+            </template>
+          </div>
           <template x-for="(item, idx) in (opts.fields||[])" :key="idx">
             <div class="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
               <div class="flex-1 grid grid-cols-[1fr_100px] gap-2">
@@ -1973,13 +2072,13 @@ if (!$isAuth):
 
     <!-- Modules tab (form blocks only) -->
     <div x-show="blockModalTab==='modules'" class="overflow-y-auto sb p-5 space-y-4 flex-1">
-      <template x-if="!modulesUI.emailLoaded || !moduleEmail.domain">
+      <template x-if="!mailReady()">
         <div class="text-center py-8 text-gray-600 text-sm">
           <p>Email-модуль не настроен.</p>
           <a href="/admin/?tab=modules" class="text-blue-400 hover:underline text-xs mt-1 inline-block">Настроить в Модулях</a>
         </div>
       </template>
-      <template x-if="modulesUI.emailLoaded && moduleEmail.domain">
+      <template x-if="mailReady()">
         <div class="space-y-4">
           <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
@@ -2163,7 +2262,10 @@ function app(){return{
   productForm:{id:'',title:'',priceRub:0,image_url:'',success_page_id:'',is_active:true},
   formProducts:[],
   moduleEmail:{provider:'mail',domain:'',sender:'',password:''},
-  modulesUI:{emailOpen:false,emailLoading:false,emailSaving:false,emailSaved:false,emailShowPass:false,emailLoaded:false,emailError:''},
+  modulesUI:{emailOpen:false,emailLoading:false,emailSaving:false,emailSaved:false,emailShowPass:false,emailLoaded:false,emailError:'',
+    smtpbzOpen:false,smtpbzLoading:false,smtpbzSaving:false,smtpbzSaved:false,smtpbzShowKey:false,smtpbzLoaded:false,smtpbzError:''},
+  moduleSmtpbz:{apiKey:'',sender:'',name:''},
+  smtpbzTest:{to:'',sending:false,ok:false,error:''},
   mailings:[],mailingsLoading:false,
   mailingModal:false,mailingSaving:false,mailingError:'',
   mailingForm:{id:'',subject:'',body:'',template:'plain',isHtml:false},_mailingTextBackup:'',
@@ -2204,6 +2306,7 @@ function app(){return{
     const params=new URLSearchParams(location.search);
     const initTab=params.get('tab');
     this.loadModuleEmail();
+    this.loadModuleSmtpbz();
     if(initTab&&['templates','design','settings','submissions','payments','products','modules','mailings'].includes(initTab)){
       this.activeTab=initTab;
       if(initTab==='submissions')this.loadAllSubmissions();
@@ -2679,6 +2782,46 @@ function app(){return{
     this.modulesUI.emailSaving=false;
     this.modulesUI.emailSaved=true;
     setTimeout(()=>this.modulesUI.emailSaved=false,3000);
+  },
+  async sendSmtpbzTest(){
+    const t=this.smtpbzTest;
+    t.ok=false;t.error='';
+    if(!this.moduleSmtpbz.apiKey.trim()||!this.moduleSmtpbz.sender.trim()){t.error='Сначала заполните API-ключ и адрес отправителя';return;}
+    if(!t.to.trim()){t.error='Введите адрес для тестового письма';return;}
+    t.sending=true;
+    try{
+      const d=await(await fetch('/admin/api.php?action=testSmtpbz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey:this.moduleSmtpbz.apiKey.trim(),sender:this.moduleSmtpbz.sender.trim(),name:this.moduleSmtpbz.name.trim(),to:t.to.trim()})})).json();
+      if(d.ok)t.ok=true;else t.error=d.error||'Не удалось отправить';
+    }catch(e){t.error='Ошибка сети';}
+    t.sending=false;
+  },
+  mailReady(){
+    return !!((this.modulesUI.emailLoaded&&this.moduleEmail.domain)||(this.modulesUI.smtpbzLoaded&&this.moduleSmtpbz.apiKey&&this.moduleSmtpbz.sender));
+  },
+  async loadModuleSmtpbz(){
+    if(this.modulesUI.smtpbzLoaded)return;
+    this.modulesUI.smtpbzLoading=true;
+    try{
+      const d=await(await fetch('/admin/api.php?action=getModuleSettings&module=smtpbz')).json();
+      this.moduleSmtpbz.apiKey=d.settings?.apiKey||'';
+      this.moduleSmtpbz.sender=d.settings?.sender||'';
+      this.moduleSmtpbz.name=d.settings?.name||'';
+      this.modulesUI.smtpbzLoaded=true;
+    }catch(e){}
+    this.modulesUI.smtpbzLoading=false;
+  },
+  async saveModuleSmtpbz(){
+    const apiKey=this.moduleSmtpbz.apiKey.trim(),sender=this.moduleSmtpbz.sender.trim(),name=this.moduleSmtpbz.name.trim();
+    if(!apiKey||!sender){this.modulesUI.smtpbzError='Заполните API-ключ и адрес отправителя';return;}
+    this.modulesUI.smtpbzError='';
+    this.modulesUI.smtpbzSaving=true;
+    this.modulesUI.smtpbzSaved=false;
+    try{
+      const d=await(await fetch('/admin/api.php?action=saveModuleSettings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({module:'smtpbz',settings:{apiKey,sender,name}})})).json();
+      if(d.ok){Object.assign(this.moduleSmtpbz,{apiKey,sender,name});this.modulesUI.smtpbzSaved=true;setTimeout(()=>this.modulesUI.smtpbzSaved=false,3000);}
+      else this.modulesUI.smtpbzError=d.error||'Ошибка сохранения';
+    }catch(e){this.modulesUI.smtpbzError='Ошибка сети';}
+    this.modulesUI.smtpbzSaving=false;
   },
 
   _formFieldsSortable:null,

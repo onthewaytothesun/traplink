@@ -42,7 +42,7 @@
       <button @click="activeTab='modules'"
         :class="activeTab==='modules'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Модули</button>
-      <button x-show="modulesUI.emailLoaded && moduleEmail.domain" @click="activeTab='mailings';loadMailings()"
+      <button x-show="mailReady()" @click="activeTab='mailings';loadMailings()"
         :class="activeTab==='mailings'?'bg-gray-800 text-white':'text-gray-500 hover:text-gray-200'"
         class="px-3 py-1.5 rounded-lg text-sm transition-colors">Рассылки</button>
     <?php else: ?>

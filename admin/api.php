@@ -473,6 +473,23 @@ switch ($action) {
         echo json_encode(['ok' => true]);
         break;
 
+    case 'testSmtpbz': {
+        $apiKey = trim($body['apiKey'] ?? '');
+        $from   = trim($body['sender'] ?? '');
+        $to     = trim($body['to'] ?? '');
+        if (!$apiKey || !filter_var($from, FILTER_VALIDATE_EMAIL) || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['error' => 'Укажите API-ключ, адрес отправителя и корректный адрес получателя']);
+            break;
+        }
+        require_once dirname(__DIR__) . '/includes/smtpbz.php';
+        $html = '<html><body style="font-family:Arial,sans-serif;color:#333;line-height:1.6">'
+              . '<p>Это тестовое письмо из модуля smtp.bz.</p><p>Если вы его получили — отправка настроена правильно.</p>'
+              . '</body></html>';
+        $res = smtpbz_send($apiKey, $from, trim($body['name'] ?? ''), $to, '', 'Тестовое письмо smtp.bz', $html);
+        echo json_encode($res['ok'] ? ['ok' => true] : ['error' => $res['error']], JSON_UNESCAPED_UNICODE);
+        break;
+    }
+
     // ── Payments ────────────────────────────────────────────────────────────
 
     case 'payments':

@@ -76,18 +76,28 @@ if ($submitMailings) {
     }
     $_ml_log("recipient=$recipientEmail name=$recipientName");
     if ($recipientEmail) {
-        // Load email module settings
-        try {
-            $emailCfg = $pdo->prepare("SELECT `setting_value` FROM `tap_settings` WHERE `setting_key`='module_email'");
-            $emailCfg->execute();
-            $emailSettings = json_decode($emailCfg->fetchColumn() ?: '{}', true);
-        } catch (PDOException $e) { $emailSettings = []; }
+        // Load email module settings (smtp.bz takes priority over personal account)
+        $loadModule = function(string $key) use ($pdo) {
+            try {
+                $st = $pdo->prepare("SELECT `setting_value` FROM `tap_settings` WHERE `setting_key`=?");
+                $st->execute([$key]);
+                return json_decode($st->fetchColumn() ?: '{}', true) ?: [];
+            } catch (PDOException $e) { return []; }
+        };
+        $smtpbzSettings = $loadModule('module_smtpbz');
+        $emailSettings  = $loadModule('module_email');
+        $useSmtpbz = !empty($smtpbzSettings['apiKey']) && !empty($smtpbzSettings['sender']);
 
-        if (!empty($emailSettings['domain']) && !empty($emailSettings['password'])) {
-            $smtpUser = $emailSettings['domain'];
-            $smtpPass = $emailSettings['password'];
-            $smtpHost = ($emailSettings['provider'] ?? 'mail') === 'yandex' ? 'smtp.yandex.ru' : 'smtp.mail.ru';
-            $sender   = $emailSettings['sender'] ?: $smtpUser;
+        if ($useSmtpbz || (!empty($emailSettings['domain']) && !empty($emailSettings['password']))) {
+            if ($useSmtpbz) {
+                require_once __DIR__ . '/includes/smtpbz.php';
+                $sender = $smtpbzSettings['sender'];
+            } else {
+                $smtpUser = $emailSettings['domain'];
+                $smtpPass = $emailSettings['password'];
+                $smtpHost = ($emailSettings['provider'] ?? 'mail') === 'yandex' ? 'smtp.yandex.ru' : 'smtp.mail.ru';
+                $sender   = $emailSettings['sender'] ?: $smtpUser;
+            }
 
             // Load and send each mailing
             $mailingIds = array_column($submitMailings, 'id');
@@ -126,9 +136,14 @@ if ($submitMailings) {
                     $emailBody = "<html><body style=\"font-family:Arial,sans-serif;color:#333;line-height:1.6\">$textHtml</body></html>";
                 }
 
-                // Send via SMTP with fsockopen
-                $_ml_log("SENDING to=$recipientEmail subj=$subj sender=$sender smtp=$smtpHost");
-                $mailResult = _sendSmtp($smtpHost, 465, $smtpUser, $smtpPass, $sender, $recipientEmail, $subj, $emailBody);
+                if ($useSmtpbz) {
+                    $_ml_log("SENDING to=$recipientEmail subj=$subj sender=$sender via=smtp.bz");
+                    $mailResult = smtpbz_send($smtpbzSettings['apiKey'], $sender, $smtpbzSettings['name'] ?? '', $recipientEmail, $recipientName, $subj, $emailBody)['ok'];
+                } else {
+                    // Send via SMTP with fsockopen
+                    $_ml_log("SENDING to=$recipientEmail subj=$subj sender=$sender smtp=$smtpHost");
+                    $mailResult = _sendSmtp($smtpHost, 465, $smtpUser, $smtpPass, $sender, $recipientEmail, $subj, $emailBody);
+                }
                 $_ml_log("RESULT: " . ($mailResult ? 'OK' : 'FAIL'));
             }
         }
