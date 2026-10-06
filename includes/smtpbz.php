@@ -17,7 +17,6 @@ function smtpbz_send(string $apiKey, string $from, string $fromName, string $to,
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err  = curl_error($ch);
     curl_close($ch);
-    file_put_contents(dirname(__DIR__) . '/mail-debug.log', date('Y-m-d H:i:s') . " SMTPBZ: HTTP $code " . ($err ?: substr($resp, 0, 500)) . "\n", FILE_APPEND);
 
     if ($code === 200) return ['ok' => true];
     if ($err) return ['ok' => false, 'error' => 'Ошибка соединения: ' . $err];
