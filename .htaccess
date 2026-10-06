@@ -1,0 +1,22 @@
+Options -Indexes
+DirectoryIndex index.php index.html
+
+RewriteEngine On
+
+# Служебное не отдаётся из браузера: конфиг, логи, документация, тесты
+<FilesMatch "^(config(\.example)?\.php|\.env|.*\.log|.*\.md|.*\.cjs|.*\.json)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+RewriteRule ^(tests|docs|\.claude|\.git)(/|$) - [F,L]
+
+# В загрузках не исполняются скрипты
+RewriteRule ^uploads/.*\.(php\d?|phtml|phar)$ - [F,L]
+
+# Страницы: /p/{slug} → pub.php
+RewriteRule ^p/([a-zA-Z0-9\-_]+)/?$ pub.php?slug=$1 [QSA,L]

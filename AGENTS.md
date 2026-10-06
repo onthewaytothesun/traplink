@@ -1,150 +1,89 @@
-# Namecheap / taplink.one-way.dev
+# Traplink
 
-Сайт-конструктор на шаред-хостинге Namecheap. Фронтенд-заглушка (Vue) + PHP-бэкенд с админкой блоков.
+CMS мультиссылок на PHP + MySQL, обратно совместимая с Taplink: те же типы блоков, структура `options` и разметка страницы. Без сборки и фреймворков на сервере: админка — PHP-сессия, Alpine.js и Tailwind с CDN.
 
-## Сервер
+Установка и перенос страниц с Taplink — в `README.md`. Данные конкретного сервера (адрес, SSH, деплой) — в `CLAUDE.local.md`, он не в git.
 
-- Хост: `66.29.146.56`, порт SSH: `21098`, пользователь `oneway`
-- SSH ключ: `~/.ssh/id_rsa`
-- Веб-корень: `~/taplink.one-way.dev/`
-- Живой адрес: **https://taplink.one-way.dev**
-- PHP, MySQL (localhost)
+## Структура
 
-## Деплой
+| Путь | Что |
+|---|---|
+| `index.php` | главная: страница с `is_main = 1`, иначе `index.html` или подсказка открыть админку |
+| `pub.php` | страница по `/p/{slug}` (роутинг в `.htaccess`) |
+| `page.php` | общий рендерер страницы и блоков (`renderPage`) |
+| `submit.php` | приём форм: заявки, заказы, письма |
+| `payment-callback.php` | уведомления GetPlatinum об оплате (HMAC в `X-Checksum`) |
+| `smtpbz-hook.php` | вебхуки smtp.bz о доставке писем |
+| `admin/index.php` | админка: вход и SPA |
+| `admin/api.php` | JSON API админки, `?action=…`; создаёт таблицы при первом обращении |
+| `admin/template-api.php`, `admin/_templates.php` | шаблоны страниц |
+| `admin/upload.php` | загрузка картинок и аудио в `uploads/` (проверка MIME) |
+| `includes/` | дизайн страницы, метаданные, шаблоны и их пресеты, рендер «Своего блока», клиент smtp.bz |
+| `assets/` | стили фронта (`taplink-frontend.css`, `blocks.css`) и редактор «Своего блока» |
+| `tests/` | PHP- и Node-тесты, браузерные сценарии на временной SQLite |
+| `docs/` | шаблоны страниц, редактор «Своего блока» |
 
-Файлы деплоятся вручную через `scp`:
+## Конфиг
 
-```bash
-scp -P 21098 local/file.php oneway@66.29.146.56:~/taplink.one-way.dev/file.php
+`config.php` (образец — `config.example.php`) возвращает массив: `db_host`, `db_name`, `db_user`, `db_pass`, `admin_login`, `admin_password`. В git его нет, `.htaccess` закрывает его из браузера. Остальные настройки (оплаты, smtp.bz, дизайн) хранятся в базе и задаются в админке.
+
+`.htaccess` в репозитории: роутинг `/p/{slug}`, запрет на конфиг, логи, `*.md`, `tests/`, `docs/` и исполнение скриптов в `uploads/`. Меняя его, сохраняйте эти правила.
+
+## База
+
+Таблицы создаются кодом (`CREATE TABLE IF NOT EXISTS`), миграций нет.
+
+| Таблица | Что |
+|---|---|
+| `tap_pages` | страницы: `id` (`p-{hex}`), `title`, `slug`, `is_main`, `folder_id`, `sort_order`, оформление |
+| `tap_folders` | папки страниц |
+| `tap_sections` | секции страницы: `id` (`s-{hex}`), `page_id`, оформление |
+| `tap_blocks` | блоки: `page_id`, `section_id`, `block_type_id`, `block_type_name`, `options` (JSON), `is_visible`, `sort_order`, `anchor` |
+| `tap_templates` | свои шаблоны страниц |
+| `tap_submissions` | заявки из форм |
+| `tap_products`, `tap_orders`, `tap_payments` | товары, заказы, платёжные настройки |
+| `tap_mailings`, `tap_smtpbz_events` | рассылки и события доставки писем |
+| `tap_settings` | общие настройки сайта и модулей |
+
+## Блоки
+
+`options` у каждого типа совпадает с Taplink, поэтому блоки из `window.data` страницы Taplink можно класть в `tap_blocks` как есть.
+
+| id | name | id | name |
+|---|---|---|---|
+| 1 | text | 13 | timer |
+| 2 | link | 14 | collapse |
+| 3 | messenger | 15 | banner |
+| 4 | video | 20 | media |
+| 5 | break | 21 | pricing |
+| 6 | socialnetworks | 22 | music |
+| 7 | html | 36 | digitals-product |
+| 8 | avatar | 50 | plans |
+| 9 | pictures | 51 | zero («Свой блок») |
+| 10 | form | 12 | map |
+
+`page.php` рендерит text, link, messenger, video, break, socialnetworks, html, avatar, pictures, form, map, timer, collapse, banner, media, pricing, music, plans и zero. Остальные типы хранятся и редактируются в админке как JSON.
+
+Разметка повторяет Taplink: `.main.main-theme` → `.page-content` → `.blocks-section` → `.page-container` → `.section-main` → `.block-item.block-{name}`; кнопка ссылки — `.btn-link` с `.btn-link-title` и `.btn-link-subtitle`; цвета темы — CSS-переменные `--theme-*` на `:root`. От этой разметки зависят HTML-коды, написанные для Taplink, — не меняйте классы без нужды. `window.data` и `window.account` Traplink не создаёт.
+
+«Свой блок» хранит слои в `options.zero` и рендерится `includes/zero-render.php`; старые блоки с `options.html` продолжают работать (подробно — `docs/zero-editor.md`).
+
+## API админки
+
+`admin/api.php?action=…`, только после входа (иначе 401):
+
+- страницы и папки: `pages`, `addPage`, `updatePage`, `setMain`, `deletePage`, `folders`, `addFolder`, `updateFolder`, `deleteFolder`;
+- секции: `sections`, `addSection`, `updateSection`, `deleteSection`;
+- блоки: `blocks`, `save` (создать или обновить), `delete`, `toggle`, `reorder`, `reorderFull`;
+- настройки и модули: `getSettings`, `saveSettings`, `getSiteSettings`, `saveSiteSettings`, `getModuleSettings`, `saveModuleSettings`, `testSmtpbz`, `smtpbzWebhooks`;
+- заявки, оплаты, товары, рассылки: `submissions`, `deleteSubmission`, `payments`, `savePayment`, `togglePayment`, `deletePayment`, `orders`, `initPayment`, `paymentStatus`, `products`, `saveProduct`, `deleteProduct`, `mailings`, `saveMailing`, `deleteMailing`.
+
+## Проверки
+
+```sh
+php tests/page-templates.php
+php tests/zero-render.php
+node --test tests/zero-model.test.cjs
 ```
 
-Локальная копия: `/Users/antonfedorov/Downloads/phpshtormprojects/traplink/`
-Vue-дашборд: `vue/dashboard/` (Vite + Vue 3 + Tailwind)
-
-## Структура на сервере
-
-```
-~/taplink.one-way.dev/
-├── index.php          # Точка входа: рендерит главную страницу из БД или фоллбек на index.html
-├── index.html         # Старый Vue-дашборд (фоллбек если главная страница не задана)
-├── pub.php            # Рендерит страницы по /p/{slug}
-├── page.php           # Общий рендерер блоков (include в index.php и pub.php)
-├── config.php         # Конфиг БД и логин/пароль админки (закрыт .htaccess)
-├── .htaccess          # DirectoryIndex + роутинг /p/slug → pub.php
-└── admin/
-    ├── index.php      # Админка (логин + SPA на Alpine.js + Tailwind CDN)
-    └── api.php        # JSON API для CRUD операций
-```
-
-## БД
-
-- База: `cc26299_tap`
-- Хост: `localhost`
-- Логин/пароль: в `config.php` (вне веб-корня не работает из-за прав Apache — файл лежит в `public_html/config.php` и закрыт в `.htaccess`)
-
-### Таблицы
-
-**`tap_pages`** — страницы сайта
-| поле | тип | описание |
-|------|-----|----------|
-| id | varchar(64) | `p-{hex}` |
-| title | varchar(255) | название |
-| slug | varchar(128) | URL-идентификатор (`/p/{slug}`) |
-| is_main | tinyint(1) | главная страница (открывается по `/`) |
-| sort_order | int | порядок |
-
-**`tap_sections`** — секции внутри страниц
-| поле | тип | описание |
-|------|-----|----------|
-| id | varchar(64) | `s-{hex}` |
-| page_id | varchar(64) | FK → tap_pages |
-| title | varchar(255) | название |
-| sort_order | int | порядок |
-
-**`tap_blocks`** — блоки контента
-| поле | тип | описание |
-|------|-----|----------|
-| id | varchar(64) | `{hex}` |
-| page_id | varchar(64) | FK → tap_pages |
-| section_id | varchar(64) | FK → tap_sections (необязательно) |
-| block_type_id | int | числовой тип (1–51) |
-| block_type_name | varchar(64) | строковый тип (text, link, ...) |
-| options | longtext | JSON с данными блока |
-| is_visible | tinyint(1) | видимость |
-| sort_order | int | порядок |
-| anchor | varchar(128) | якорь для навигации |
-
-## Роутинг
-
-```
-/            → index.php  → главная страница из БД (или index.html если не задана)
-/p/{slug}    → pub.php    → страница по slug
-/admin/      → admin/index.php → админка
-/admin/api.php?action=... → JSON API
-```
-
-## Админка
-
-URL: https://timeweb.one-way.dev/admin
-Логин/пароль: в `config.php` (ADMIN_LOGIN / ADMIN_PASSWORD)
-
-Стек: PHP-сессия для авторизации, Alpine.js 3 + Tailwind CSS CDN (без сборки).
-
-### API actions (POST/GET к `/admin/api.php`)
-
-| action | метод | описание |
-|--------|-------|----------|
-| pages | GET | список страниц |
-| addPage | POST | создать страницу |
-| updatePage | POST | обновить title/slug |
-| setMain | POST | пометить как главную (снимает флаг с остальных) |
-| deletePage | POST | удалить страницу |
-| sections?page_id= | GET | секции страницы |
-| addSection | POST | создать секцию |
-| deleteSection | POST | удалить секцию |
-| blocks?page_id= | GET | блоки страницы |
-| save | POST | создать или обновить блок |
-| delete | POST | удалить блок |
-| toggle | POST | переключить is_visible |
-| reorder | POST | изменить sort_order (массив ids) |
-
-## Типы блоков
-
-Документация по структуре options: `/Users/antonfedorov/Downloads/phpshtormprojects/taplinkMovingOut/blocks.md`
-
-Поддерживаемые типы и их рендеринг в `page.php`:
-
-| id | name | рендеринг |
-|----|------|-----------|
-| 1 | text | `<p>` / `<h1>`–`<h3>`, выравнивание |
-| 2 | link | кнопка-ссылка, 3 стиля |
-| 3 | messenger | ссылки на мессенджеры (Telegram, WhatsApp, Viber...) |
-| 4 | video | YouTube/Vimeo embed |
-| 5 | break | разделитель с высотой |
-| 6 | socialnetworks | иконки соцсетей |
-| 7 | html | произвольный HTML |
-| 8 | avatar | круглое фото |
-| 9 | pictures | — (JSON editor) |
-| 10 | form | — (JSON editor) |
-| 11 | page | — (JSON editor) |
-| 12 | map | Google Maps embed |
-| 13 | timer | обратный отсчёт с JS |
-| 14 | collapse | FAQ-аккордеон (`<details>`) |
-| 15 | banner | баннер с картинкой и ссылкой |
-| 20 | media | список иконка+текст |
-| 21 | pricing | прайс-лист |
-| 22 | music | — (JSON editor) |
-| 36 | digitals-product | — (JSON editor) |
-| 50 | plans | — (JSON editor) |
-| 51 | zero | произвольный HTML (как html) |
-
-Блоки без рендерера редактируются через JSON-поле в админке.
-
-## Vue дашборд (заглушка)
-
-Путь: `vue/dashboard/`
-Стек: Vue 3, Vite, Tailwind CSS, Radix Vue, Lucide
-Сборка: `npm run build` → `dist/`
-Деплой dist: `scp -r dist/* timeweb:~/public_html/` (перезапишет assets и index.html)
-
-> Показывается только если в БД нет страницы с `is_main=1`
+Браузерные сценарии (`tests/templates-browser.cjs`, `tests/zero-browser.cjs`) поднимают временную SQLite-базу и локальный PHP-сервер; нужны PHP с PDO SQLite, Google Chrome и Playwright (`PLAYWRIGHT_PATH`). Рабочую базу тесты не трогают.
